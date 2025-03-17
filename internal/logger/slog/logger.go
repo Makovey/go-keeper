@@ -17,6 +17,11 @@ func (l *logger) Errorf(format string, v ...any) {
 	l.Error(message)
 }
 
+func (l *logger) Infof(format string, args ...any) {
+	message := fmt.Sprintf(format, args...)
+	l.Info(message)
+}
+
 func NewLogger() def.Logger {
 	return &logger{slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))}
 }

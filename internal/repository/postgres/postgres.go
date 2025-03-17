@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/logger"
 )

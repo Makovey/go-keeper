@@ -1,5 +1,7 @@
 package config
 
+import "github.com/Makovey/go-keeper/internal/logger"
+
 type Config interface {
 	DatabaseDSN() string
 	GRPCPort() string
@@ -18,8 +20,11 @@ func (c *config) GRPCPort() string {
 	return c.grpcPort
 }
 
-func NewConfig() Config {
+func NewConfig(log logger.Logger) Config {
 	cfg := newEnvConfig()
+
+	log.Debug("DatabaseDSN: " + cfg.databaseDSN)
+	log.Debug("GRPCPort: " + cfg.grpcPort)
 
 	return &config{
 		databaseDSN: cfg.databaseDSN,
