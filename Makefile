@@ -17,3 +17,10 @@ mig-u:
 
 mig-d:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
+
+gen-auth-api:
+	mkdir -p internal/gen/auth/
+	protoc --proto_path api/auth \
+	--go_out=internal/gen/auth/ --go_opt=paths=source_relative \
+	--go-grpc_out=internal/gen/auth/ --go-grpc_opt=paths=source_relative \
+	api/auth/auth.proto

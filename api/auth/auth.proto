@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package auth;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/Makovey/internal/gen/auth";
+
+service Auth {
+  rpc Register(User) returns (google.protobuf.Empty);
+}
+
+message User {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  string password_confirm = 4;
+}
