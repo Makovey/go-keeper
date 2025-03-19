@@ -20,7 +20,7 @@ func main() {
 		syslog.Fatalf("[%s]: %s", "main", err.Error())
 	}
 
-	service := keeper.NewService(repo, cfg, log)
+	service := keeper.NewAuthService(repo, cfg, log)
 	authServer := auth.NewAuthServer(log, service)
 
 	appl := app.NewApp(

@@ -1,20 +1,26 @@
 package auth
 
 import (
+	"context"
+
 	"github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger"
-	"github.com/Makovey/go-keeper/internal/transport/grpc"
+	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
+
+type Service interface {
+	RegisterUser(ctx context.Context, user *model.User) error
+}
 
 type Server struct {
 	auth.UnimplementedAuthServer
 	log     logger.Logger
-	service grpc.Service
+	service Service
 }
 
 func NewAuthServer(
 	log logger.Logger,
-	service grpc.Service,
+	service Service,
 ) *Server {
 	return &Server{
 		log:     log,
