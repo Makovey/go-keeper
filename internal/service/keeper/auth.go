@@ -18,6 +18,7 @@ import (
 
 type AuthRepository interface {
 	RegisterUser(ctx context.Context, user *dbo.User) error
+	GetUserInfo(ctx context.Context, email string) (*dbo.User, error)
 }
 
 type service struct {
@@ -62,6 +63,27 @@ func (s *service) RegisterUser(ctx context.Context, user *model.User) (string, e
 	}
 
 	token, err := s.jwt.AssembleNewJWT(dboUser.ID)
+	if err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return token, nil
+}
+
+func (s *service) LoginUser(ctx context.Context, login *model.Login) (string, error) {
+	fn := "keeper.LoginUser"
+
+	user, err := s.repo.GetUserInfo(ctx, login.Email)
+	if err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(login.Password))
+	if err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrIncorrectPassword)
+	}
+
+	token, err := s.jwt.AssembleNewJWT(user.ID)
 	if err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}

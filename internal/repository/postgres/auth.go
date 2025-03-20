@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/Makovey/go-keeper/internal/repository/dbo"
@@ -36,4 +37,27 @@ func (r *Repo) RegisterUser(ctx context.Context, user *dbo.User) error {
 	}
 
 	return nil
+}
+
+func (r *Repo) GetUserInfo(ctx context.Context, email string) (*dbo.User, error) {
+	fn := "postgres.GetUserInfo"
+
+	row := r.db.QueryRow(
+		ctx,
+		`SELECT id, name, email, password_hash FROM users WHERE email = $1`,
+		email,
+	)
+
+	var user dbo.User
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.PasswordHash)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return &dbo.User{}, fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrUserNotFound)
+		default:
+			return &dbo.User{}, fmt.Errorf("[%s]: %w", fn, err)
+		}
+	}
+
+	return &user, nil
 }

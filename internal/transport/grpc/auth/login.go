@@ -16,21 +16,23 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 )
 
-func (s *Server) RegisterUser(ctx context.Context, req *auth.User) (*emptypb.Empty, error) {
-	fn := "auth.RegisterUser"
+func (s *Server) LoginUser(ctx context.Context, req *auth.LoginRequest) (*emptypb.Empty, error) {
+	fn := "auth.LoginUser"
 
-	user := mapper.ToUserFromProto(req)
+	login := mapper.ToLoginFromProto(req)
 
-	if err := user.Validate(); err != nil {
+	if err := login.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	token, err := s.service.RegisterUser(ctx, user)
+	token, err := s.service.LoginUser(ctx, login)
 	if err != nil {
 		s.log.Errorf("[%s]: %v", fn, err.Error())
 		switch {
-		case errors.Is(err, service.ErrUserAlreadyExists):
-			return nil, status.Error(codes.AlreadyExists, "email already registered")
+		case errors.Is(err, service.ErrUserNotFound):
+			return nil, status.Error(codes.InvalidArgument, "email not found")
+		case errors.Is(err, service.ErrIncorrectPassword):
+			return nil, status.Error(codes.InvalidArgument, "incorrect password")
 		}
 		return nil, status.Error(codes.Internal, grpcerr.InternalServerError)
 	}
