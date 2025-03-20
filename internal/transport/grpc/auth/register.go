@@ -14,15 +14,15 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 )
 
-func (s *Server) Register(ctx context.Context, user *auth.User) (*emptypb.Empty, error) {
-	fn := "auth.Register"
+func (s *Server) RegisterUser(ctx context.Context, user *auth.User) (*emptypb.Empty, error) {
+	fn := "auth.RegisterUser"
 
 	err := s.service.RegisterUser(ctx, mapper.ToUserFromProto(user))
 	if err != nil {
 		s.log.Errorf("[%s]: %v", fn, err.Error())
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists):
-			return nil, status.Error(codes.AlreadyExists, "user already exists")
+			return nil, status.Error(codes.AlreadyExists, "email already registered")
 		}
 		return nil, status.Error(codes.Internal, grpc.InternalServerError)
 	}

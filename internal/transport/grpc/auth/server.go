@@ -14,6 +14,7 @@ type Service interface {
 
 type Server struct {
 	auth.UnimplementedAuthServer
+
 	log     logger.Logger
 	service Service
 }
