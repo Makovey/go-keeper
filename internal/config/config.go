@@ -5,11 +5,13 @@ import "github.com/Makovey/go-keeper/internal/logger"
 type Config interface {
 	DatabaseDSN() string
 	GRPCPort() string
+	SecretKey() string
 }
 
 type config struct {
 	databaseDSN string
 	grpcPort    string
+	secretKey   string
 }
 
 func (c *config) DatabaseDSN() string {
@@ -18,6 +20,10 @@ func (c *config) DatabaseDSN() string {
 
 func (c *config) GRPCPort() string {
 	return c.grpcPort
+}
+
+func (c *config) SecretKey() string {
+	return c.secretKey
 }
 
 func NewConfig(log logger.Logger) Config {
@@ -29,5 +35,6 @@ func NewConfig(log logger.Logger) Config {
 	return &config{
 		databaseDSN: cfg.databaseDSN,
 		grpcPort:    cfg.grpcPort,
+		secretKey:   cfg.secretKey,
 	}
 }

@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	RegisterUser(ctx context.Context, user *model.User) error
+	RegisterUser(ctx context.Context, user *model.User) (string, error)
 }
 
 type Server struct {

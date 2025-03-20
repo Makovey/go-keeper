@@ -7,6 +7,7 @@ import (
 	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/logger/slog"
 	"github.com/Makovey/go-keeper/internal/repository/postgres"
+	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/service/keeper"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 )
@@ -19,8 +20,9 @@ func main() {
 	if err != nil {
 		syslog.Fatalf("[%s]: %s", "main", err.Error())
 	}
+	manager := jwt.NewManager(cfg)
 
-	service := keeper.NewAuthService(repo, cfg, log)
+	service := keeper.NewAuthService(repo, manager, cfg, log)
 	authServer := auth.NewAuthServer(log, service)
 
 	appl := app.NewApp(
