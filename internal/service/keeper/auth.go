@@ -16,6 +16,7 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
+//go:generate mockgen -source=auth.go -destination=../../repository/mock/repository_mock.go -package=mock
 type AuthRepository interface {
 	RegisterUser(ctx context.Context, user *dbo.User) error
 	GetUserInfo(ctx context.Context, email string) (*dbo.User, error)
