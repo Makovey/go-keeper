@@ -8,6 +8,7 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
+//go:generate mockgen -source=server.go -destination=../../../service/mock/auth_service_mock.go -package=mock
 type Service interface {
 	RegisterUser(ctx context.Context, user *model.User) (string, error)
 	LoginUser(ctx context.Context, user *model.Login) (string, error)
