@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"context"
+	"log"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -14,7 +17,7 @@ const (
 	select2 = "Sign In"
 )
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.startedPage.list.SetWidth(msg.Width)
@@ -36,20 +39,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switch choice {
 				case select1:
 					m.step = signUp
-					m.signUpPage.name.Focus()
+					makeActiveInput(&m.signUpPage.name, nil)
 				case select2:
 					m.step = signIn
-					m.signInPage.email.Focus()
+					makeActiveInput(&m.signInPage.email, nil)
 				}
 				return m, nil
 			case signUp:
-				// TODO: get data and make request
+				err := m.client.Register(context.TODO(), m.GetRegisterUserData())
+				if err != nil {
+					// TODO: show error
+					return m, nil
+				}
+				log.Print("Access granted")
 				return m, tea.Quit
 			case signIn:
-				// TODO: get data and make request
+				err := m.client.Login(context.TODO(), m.GetLoginData())
+				if err != nil {
+					// TODO: show error
+					return m, nil
+				}
+				log.Print("Access granted")
 				return m, tea.Quit
 			}
-
 		case tab:
 			switch m.step {
 			case signUp:

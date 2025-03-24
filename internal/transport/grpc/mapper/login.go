@@ -11,3 +11,10 @@ func ToLoginFromProto(user *auth.LoginRequest) *model.Login {
 		Password: user.Password,
 	}
 }
+
+func FromProtoToLogin(login *model.Login) *auth.LoginRequest {
+	return &auth.LoginRequest{
+		Email:    login.Email,
+		Password: login.Password,
+	}
+}

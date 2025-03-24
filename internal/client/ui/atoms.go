@@ -37,8 +37,6 @@ func nameInput() textinput.Model {
 func emailInput() textinput.Model {
 	e := textinput.New()
 	e.Placeholder = "Email"
-	e.TextStyle = focusedStyle
-	e.PromptStyle = focusedStyle
 
 	return e
 }

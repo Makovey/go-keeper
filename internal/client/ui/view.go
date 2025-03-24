@@ -45,7 +45,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fmt.Fprint(w, fn(str))
 }
 
-func (m Model) View() string {
+func (m *Model) View() string {
 	var b strings.Builder
 
 	switch m.step {

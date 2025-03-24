@@ -4,6 +4,9 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/Makovey/go-keeper/internal/client/grpc"
+	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
 type step int
@@ -34,22 +37,39 @@ type Model struct {
 	startedPage starterPage
 	signUpPage  signUpPage
 	signInPage  signInPage
+	client      *grpc.AuthClient
 }
 
-func InitialModel() Model {
+func InitialModel(client *grpc.AuthClient) *Model {
 	l := mainList()
 	name := nameInput()
 	email := emailInput()
 	password := passwordInput()
 
-	return Model{
+	return &Model{
 		step:        startedList,
 		startedPage: starterPage{l},
 		signUpPage:  signUpPage{name: name, email: email, password: password},
 		signInPage:  signInPage{email: email, password: password},
+		client:      client,
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m *Model) GetRegisterUserData() *model.User {
+	return &model.User{
+		Name:     m.signUpPage.name.Value(),
+		Email:    m.signUpPage.email.Value(),
+		Password: m.signUpPage.password.Value(),
+	}
+}
+
+func (m *Model) GetLoginData() *model.Login {
+	return &model.Login{
+		Email:    m.signInPage.email.Value(),
+		Password: m.signInPage.password.Value(),
+	}
+}
+
+func (m *Model) Init() tea.Cmd {
 	return nil
 }

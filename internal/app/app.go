@@ -14,9 +14,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
+	client "github.com/Makovey/go-keeper/internal/client/grpc"
 	"github.com/Makovey/go-keeper/internal/client/ui"
 	"github.com/Makovey/go-keeper/internal/config"
-	grpc_auth "github.com/Makovey/go-keeper/internal/gen/auth"
+	grpcauth "github.com/Makovey/go-keeper/internal/gen/auth"
+	"github.com/Makovey/go-keeper/internal/interceptor"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 )
@@ -66,10 +68,13 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 
 	s := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
+		grpc.ChainUnaryInterceptor(
+			interceptor.Logger(a.log),
+		),
 	)
 
 	reflection.Register(s)
-	grpc_auth.RegisterAuthServer(s, a.authServer)
+	grpcauth.RegisterAuthServer(s, a.authServer)
 
 	a.log.Infof("[%s]: starting grpc server on: %s", fn, a.cfg.GRPCPort())
 	go func() {
@@ -103,7 +108,19 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	fn := "app.runUI"
 	defer wg.Done()
 
-	p := tea.NewProgram(ui.InitialModel(), tea.WithAltScreen())
+	conn, err := grpc.NewClient(
+		"localhost"+a.cfg.GRPCPort(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		a.log.Errorf("[%s]: failed to create grpc client: %s", fn, err.Error())
+		return
+	}
+	defer conn.Close()
+
+	cl := client.NewAuthClient(conn, a.log)
+
+	p := tea.NewProgram(ui.InitialModel(cl), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		a.log.Infof("[%s]: can't run ui program, cause: %v", fn, err)
 		return
