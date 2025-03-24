@@ -9,10 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/Makovey/go-keeper/internal/client/ui"
 	"github.com/Makovey/go-keeper/internal/config"
 	grpc_auth "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger"
@@ -45,6 +47,9 @@ func (a *App) Run() {
 
 	wg.Add(1)
 	go a.runGRPCServer(ctx, &wg)
+
+	wg.Add(1)
+	go a.runUI(ctx, &wg)
 
 	wg.Wait()
 }
@@ -92,4 +97,18 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 		a.log.Errorf("[%s]: graceful shutdown timeout reached, forcing shutdown", fn)
 		s.Stop()
 	}
+}
+
+func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
+	fn := "app.runUI"
+	defer wg.Done()
+
+	p := tea.NewProgram(ui.InitialModel(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		a.log.Infof("[%s]: can't run ui program, cause: %v", fn, err)
+		return
+	}
+
+	<-ctx.Done()
+	p.Quit()
 }
