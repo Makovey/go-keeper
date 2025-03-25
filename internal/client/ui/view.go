@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -59,6 +60,23 @@ func (m *Model) View() string {
 		b.WriteString(m.signInPage.email.View() + "\n")
 		b.WriteString(m.signInPage.password.View() + "\n")
 	}
+	b.WriteString(showErrorIfNeeded(m.clientErr))
 
-	return docStyle.Render(b.String())
+	return docStyle.Render(b.String() + "\n")
+}
+
+func showErrorIfNeeded(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	re := regexp.MustCompile(`desc\s*=\s*(.*)`)
+	matches := re.FindStringSubmatch(err.Error())
+	if len(matches) > 1 {
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color("9")).
+			Render("\n>> " + matches[1])
+	}
+
+	return err.Error()
 }

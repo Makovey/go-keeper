@@ -38,6 +38,7 @@ type Model struct {
 	signUpPage  signUpPage
 	signInPage  signInPage
 	client      *grpc.AuthClient
+	clientErr   error
 }
 
 func InitialModel(client *grpc.AuthClient) *Model {

@@ -29,3 +29,8 @@ func NewPostgresRepo(cfg config.Config, log logger.Logger) (*Repo, error) {
 		db:  pool,
 	}, nil
 }
+
+func (r *Repo) Close() error {
+	r.db.Close()
+	return nil
+}

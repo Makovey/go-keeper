@@ -2,7 +2,7 @@ package ui
 
 import (
 	"context"
-	"log"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,9 +24,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		m.clientErr = nil
 		switch keypress := msg.String(); keypress {
 		case cancel:
-			return m, tea.Quit
+			switch m.step {
+			case startedList:
+				return m, tea.Quit
+			default:
+				m.step = startedList
+				return m, nil
+			}
 		case enter:
 			switch m.step {
 			case startedList:
@@ -46,20 +53,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			case signUp:
+				if !m.isPageValid() {
+					return m, nil
+				}
+
 				err := m.client.Register(context.TODO(), m.GetRegisterUserData())
 				if err != nil {
-					// TODO: show error
+					m.clientErr = err
 					return m, nil
 				}
-				log.Print("Access granted")
 				return m, tea.Quit
 			case signIn:
-				err := m.client.Login(context.TODO(), m.GetLoginData())
-				if err != nil {
-					// TODO: show error
+				if !m.isPageValid() {
 					return m, nil
 				}
-				log.Print("Access granted")
+
+				err := m.client.Login(context.TODO(), m.GetLoginData())
+				if err != nil {
+					m.clientErr = err
+					return m, nil
+				}
 				return m, tea.Quit
 			}
 		case tab:
@@ -91,7 +104,42 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	return m, m.updateModelValue(msg)
+}
+
+func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {
+	active.Focus()
+	active.TextStyle = focusedStyle
+	active.PromptStyle = focusedStyle
+
+	for _, i := range inactive {
+		i.Blur()
+		i.TextStyle = noStyle
+		i.PromptStyle = noStyle
+	}
+}
+
+func (m *Model) isPageValid() bool {
+	switch m.step {
+	case signUp:
+		return isInputValid(m.signUpPage.name) &&
+			isInputValid(m.signUpPage.email) &&
+			isInputValid(m.signUpPage.password)
+	case signIn:
+		return isInputValid(m.signInPage.email) &&
+			isInputValid(m.signInPage.password)
+	default:
+		return true
+	}
+}
+
+func isInputValid(input textinput.Model) bool {
+	return utf8.RuneCountInString(input.Value()) != 0
+}
+
+func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
+
 	switch m.step {
 	case startedList:
 		m.startedPage.list, cmd = m.startedPage.list.Update(msg)
@@ -113,17 +161,5 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, cmd
-}
-
-func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {
-	active.Focus()
-	active.TextStyle = focusedStyle
-	active.PromptStyle = focusedStyle
-
-	for _, i := range inactive {
-		i.Blur()
-		i.TextStyle = noStyle
-		i.PromptStyle = noStyle
-	}
+	return cmd
 }

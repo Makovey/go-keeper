@@ -32,4 +32,8 @@ func main() {
 	)
 
 	appl.Run()
+
+	if err = repo.Close(); err != nil {
+		log.Errorf("closed repo with error: %s", err.Error())
+	}
 }
