@@ -21,7 +21,7 @@ func mainList() list.Model {
 	}
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Welcome to keeper, choose option:"
+	l.Title = "Welcome to auth, choose option:"
 	l.Styles.Title = lipgloss.NewStyle().Bold(true).Underline(true)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)

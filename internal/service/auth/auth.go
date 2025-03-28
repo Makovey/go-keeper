@@ -1,4 +1,4 @@
-package keeper
+package auth
 
 import (
 	"context"
@@ -7,51 +7,47 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/logger"
-	"github.com/Makovey/go-keeper/internal/repository/dbo"
+	"github.com/Makovey/go-keeper/internal/repository/entity"
 	serviceErrors "github.com/Makovey/go-keeper/internal/service"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
-//go:generate mockgen -source=auth.go -destination=../../repository/mock/repository_mock.go -package=mock
-type AuthRepository interface {
-	RegisterUser(ctx context.Context, user *dbo.User) error
-	GetUserInfo(ctx context.Context, email string) (*dbo.User, error)
+//go:generate mockgen -source=auth.go -destination=../../repository/mock/auth_repository_mock.go -package=mock
+type Repository interface {
+	RegisterUser(ctx context.Context, user *entity.User) error
+	GetUserInfo(ctx context.Context, email string) (*entity.User, error)
 }
 
 type service struct {
-	repo AuthRepository
+	repo Repository
 	jwt  *jwt.Manager
-	cfg  config.Config
 	log  logger.Logger
 }
 
 func NewAuthService(
-	repo AuthRepository,
+	repo Repository,
 	jwt *jwt.Manager,
-	cfg config.Config,
 	log logger.Logger,
 ) auth.Service {
 	return &service{
 		repo: repo,
 		jwt:  jwt,
-		cfg:  cfg,
 		log:  log,
 	}
 }
 
 func (s *service) RegisterUser(ctx context.Context, user *model.User) (string, error) {
-	fn := "keeper.RegisterUser"
+	fn := "auth.RegisterUser"
 
 	pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrGeneratePassword)
 	}
 
-	dboUser := dbo.User{
+	dboUser := entity.User{
 		ID:           uuid.NewString(),
 		Name:         user.Name,
 		Email:        user.Email,
@@ -72,7 +68,7 @@ func (s *service) RegisterUser(ctx context.Context, user *model.User) (string, e
 }
 
 func (s *service) LoginUser(ctx context.Context, login *model.Login) (string, error) {
-	fn := "keeper.LoginUser"
+	fn := "auth.LoginUser"
 
 	user, err := s.repo.GetUserInfo(ctx, login.Email)
 	if err != nil {

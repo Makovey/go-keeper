@@ -15,6 +15,7 @@ mig-d:
 
 gen:
 	make gen-auth-api
+	make gen-storage-api
 
 gen-auth-api:
 	mkdir -p internal/gen/auth/
@@ -22,3 +23,10 @@ gen-auth-api:
 	--go_out=internal/gen/auth/ --go_opt=paths=source_relative \
 	--go-grpc_out=internal/gen/auth/ --go-grpc_opt=paths=source_relative \
 	api/auth/auth.proto
+
+gen-storage-api:
+	mkdir -p internal/gen/storage/
+	protoc --proto_path api/storage \
+	--go_out=internal/gen/storage/ --go_opt=paths=source_relative \
+	--go-grpc_out=internal/gen/storage/ --go-grpc_opt=paths=source_relative \
+	api/storage/storage.proto

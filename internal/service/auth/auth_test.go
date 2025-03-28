@@ -1,4 +1,4 @@
-package keeper
+package auth
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/Makovey/go-keeper/internal/config/stub"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
-	"github.com/Makovey/go-keeper/internal/repository/dbo"
+	"github.com/Makovey/go-keeper/internal/repository/entity"
 	"github.com/Makovey/go-keeper/internal/repository/mock"
 	serviceErr "github.com/Makovey/go-keeper/internal/service"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
@@ -59,7 +59,7 @@ func Test_service_RegisterUser(t *testing.T) {
 			repoMock.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
 
 			cfg := stub.NewStubConfig()
-			s := NewAuthService(repoMock, jwt.NewManager(cfg), cfg, dummy.NewDummyLogger())
+			s := NewAuthService(repoMock, jwt.NewManager(cfg), dummy.NewDummyLogger())
 			got, err := s.RegisterUser(context.Background(), tt.args.user)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -78,7 +78,7 @@ func Test_service_LoginUser(t *testing.T) {
 	}
 
 	type expects struct {
-		repoAnswer *dbo.User
+		repoAnswer *entity.User
 		repoError  error
 	}
 
@@ -91,18 +91,18 @@ func Test_service_LoginUser(t *testing.T) {
 		{
 			name:    "successfully generate new auth token when log in",
 			args:    args{login: &model.Login{Email: "tt@mail.ru", Password: "tt123"}},
-			expects: expects{repoAnswer: &dbo.User{ID: "1", Name: "ttName", Email: "tt@mail.ru", PasswordHash: "tt123"}},
+			expects: expects{repoAnswer: &entity.User{ID: "1", Name: "ttName", Email: "tt@mail.ru", PasswordHash: "tt123"}},
 		},
 		{
 			name:    "fail to generate new auth token when log in: email not found",
 			args:    args{login: &model.Login{Email: "tt@mail.ru", Password: "tt123"}},
-			expects: expects{repoAnswer: &dbo.User{}, repoError: pgx.ErrNoRows},
+			expects: expects{repoAnswer: &entity.User{}, repoError: pgx.ErrNoRows},
 			wantErr: true,
 		},
 		{
 			name:    "fail to generate new auth token when log in: password doesn't match",
 			args:    args{login: &model.Login{Email: "tt@mail.ru", Password: "tt123"}},
-			expects: expects{repoAnswer: &dbo.User{ID: "1", Name: "ttName", Email: "tt@mail.ru", PasswordHash: "random"}},
+			expects: expects{repoAnswer: &entity.User{ID: "1", Name: "ttName", Email: "tt@mail.ru", PasswordHash: "random"}},
 			wantErr: true,
 		},
 	}

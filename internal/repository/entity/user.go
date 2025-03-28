@@ -1,4 +1,4 @@
-package dbo
+package entity
 
 type User struct {
 	ID           string

@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	dbo "github.com/Makovey/go-keeper/internal/repository/dbo"
+	entity "github.com/Makovey/go-keeper/internal/repository/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,10 +36,10 @@ func (m *MockAuthRepository) EXPECT() *MockAuthRepositoryMockRecorder {
 }
 
 // GetUserInfo mocks base method.
-func (m *MockAuthRepository) GetUserInfo(ctx context.Context, email string) (*dbo.User, error) {
+func (m *MockAuthRepository) GetUserInfo(ctx context.Context, email string) (*entity.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserInfo", ctx, email)
-	ret0, _ := ret[0].(*dbo.User)
+	ret0, _ := ret[0].(*entity.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -51,7 +51,7 @@ func (mr *MockAuthRepositoryMockRecorder) GetUserInfo(ctx, email interface{}) *g
 }
 
 // RegisterUser mocks base method.
-func (m *MockAuthRepository) RegisterUser(ctx context.Context, user *dbo.User) error {
+func (m *MockAuthRepository) RegisterUser(ctx context.Context, user *entity.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterUser", ctx, user)
 	ret0, _ := ret[0].(error)

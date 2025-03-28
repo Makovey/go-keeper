@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/Makovey/go-keeper/internal/repository/dbo"
+	"github.com/Makovey/go-keeper/internal/repository/entity"
 	serviceErrors "github.com/Makovey/go-keeper/internal/service"
 )
 
@@ -16,7 +16,7 @@ const (
 	errUniqueViolatesCode = "23505"
 )
 
-func (r *Repo) RegisterUser(ctx context.Context, user *dbo.User) error {
+func (r *Repo) RegisterUser(ctx context.Context, user *entity.User) error {
 	fn := "postgres.RegisterUser"
 
 	_, err := r.db.Exec(
@@ -39,7 +39,7 @@ func (r *Repo) RegisterUser(ctx context.Context, user *dbo.User) error {
 	return nil
 }
 
-func (r *Repo) GetUserInfo(ctx context.Context, email string) (*dbo.User, error) {
+func (r *Repo) GetUserInfo(ctx context.Context, email string) (*entity.User, error) {
 	fn := "postgres.GetUserInfo"
 
 	row := r.db.QueryRow(
@@ -48,14 +48,14 @@ func (r *Repo) GetUserInfo(ctx context.Context, email string) (*dbo.User, error)
 		email,
 	)
 
-	var user dbo.User
+	var user entity.User
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.PasswordHash)
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			return &dbo.User{}, fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrUserNotFound)
+			return &entity.User{}, fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrUserNotFound)
 		default:
-			return &dbo.User{}, fmt.Errorf("[%s]: %w", fn, err)
+			return &entity.User{}, fmt.Errorf("[%s]: %w", fn, err)
 		}
 	}
 

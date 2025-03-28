@@ -17,27 +17,32 @@ import (
 	client "github.com/Makovey/go-keeper/internal/client/grpc"
 	"github.com/Makovey/go-keeper/internal/client/ui"
 	"github.com/Makovey/go-keeper/internal/config"
-	grpcauth "github.com/Makovey/go-keeper/internal/gen/auth"
+	grpcAuth "github.com/Makovey/go-keeper/internal/gen/auth"
+	grpcStorage "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/interceptor"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
+	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
 
 type App struct {
 	cfg        config.Config
 	log        logger.Logger
 	authServer *auth.Server
+	storage    *storage.Server
 }
 
 func NewApp(
 	cfg config.Config,
 	log logger.Logger,
 	authServer *auth.Server,
+	storage *storage.Server,
 ) *App {
 	return &App{
 		cfg:        cfg,
 		log:        log,
 		authServer: authServer,
+		storage:    storage,
 	}
 }
 
@@ -50,8 +55,8 @@ func (a *App) Run() {
 	wg.Add(1)
 	go a.runGRPCServer(ctx, &wg)
 
-	wg.Add(1)
-	go a.runUI(ctx, &wg)
+	//wg.Add(1)
+	//go a.runUI(ctx, &wg)
 
 	wg.Wait()
 }
@@ -74,7 +79,8 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 	)
 
 	reflection.Register(s)
-	grpcauth.RegisterAuthServer(s, a.authServer)
+	grpcAuth.RegisterAuthServer(s, a.authServer)
+	grpcStorage.RegisterStorageServiceServer(s, a.storage)
 
 	a.log.Infof("[%s]: starting grpc server on: %s", fn, a.cfg.GRPCPort())
 	go func() {

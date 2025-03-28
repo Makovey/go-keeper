@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package storage;
+
+option go_package = "github.com/Makovey/internal/gen/storage";
+
+service StorageService {
+  rpc UploadFile(stream UploadRequest) returns (UploadResponse);
+}
+
+message UploadRequest {
+  bytes chunk_data = 1;
+  string filename = 2;
+}
+
+message UploadResponse {
+  string file_id = 1;
+}
