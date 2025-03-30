@@ -8,7 +8,9 @@ import (
 	"github.com/Makovey/go-keeper/internal/logger/slog"
 	"github.com/Makovey/go-keeper/internal/repository/postgres"
 	authService "github.com/Makovey/go-keeper/internal/service/auth"
+	"github.com/Makovey/go-keeper/internal/service/file_storager"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
+	storageService "github.com/Makovey/go-keeper/internal/service/storage"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
@@ -23,9 +25,15 @@ func main() {
 	}
 	manager := jwt.NewManager(cfg)
 
-	service := authService.NewAuthService(repo, manager, log)
-	authServer := auth.NewAuthServer(log, service)
-	storageServer := storage.NewStorageServer(log, service)
+	aService := authService.NewAuthService(repo, manager, log)
+	sService := storageService.NewStorageService(
+		repo,
+		file_storager.NewDiskStorager(log),
+		log,
+	)
+
+	authServer := auth.NewAuthServer(log, aService)
+	storageServer := storage.NewStorageServer(log, sService)
 
 	appl := app.NewApp(
 		cfg,
