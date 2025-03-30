@@ -19,8 +19,10 @@ import (
 	"github.com/Makovey/go-keeper/internal/config"
 	grpcAuth "github.com/Makovey/go-keeper/internal/gen/auth"
 	grpcStorage "github.com/Makovey/go-keeper/internal/gen/storage"
-	"github.com/Makovey/go-keeper/internal/interceptor"
+	"github.com/Makovey/go-keeper/internal/interceptor/stream"
+	"github.com/Makovey/go-keeper/internal/interceptor/unary"
 	"github.com/Makovey/go-keeper/internal/logger"
+	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
@@ -74,7 +76,11 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 	s := grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
-			interceptor.Logger(a.log),
+			unary.Logger(a.log),
+		),
+		grpc.ChainStreamInterceptor(
+			stream.Logger(a.log),
+			stream.JWTAuth(a.log, jwt.NewManager(a.cfg)),
 		),
 	)
 

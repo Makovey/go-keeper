@@ -9,12 +9,17 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
-	grpcErr "github.com/Makovey/go-keeper/internal/transport/grpc"
+	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
 func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest, storage.UploadResponse]) error {
 	fn := "storage.UploadFile"
+
+	userID, err := helper.GetUserIDFromContext(req.Context())
+	if err != nil {
+		return status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
+	}
 
 	var buf bytes.Buffer
 	var fileName string
@@ -32,7 +37,7 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 
 		if _, err = buf.Write(r.ChunkData); err != nil {
 			s.log.Errorf("[%s]: %v", fn, err)
-			return status.Error(codes.Internal, grpcErr.InternalServerError)
+			return status.Error(codes.Internal, helper.InternalServerError)
 		}
 		fileSize += len(r.ChunkData)
 		if r.Filename != "" {
@@ -46,10 +51,10 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 		FileSize: fileSize,
 	}
 
-	fileId, err := s.service.UploadFile(req.Context(), f, "3435830c-7e9e-40ce-b850-1d1e7f988cbc") // TODO: to real userID
+	fileId, err := s.service.UploadFile(req.Context(), f, userID)
 	if err != nil {
 		s.log.Errorf("[%s]: %v", fn, err)
-		return status.Error(codes.Internal, grpcErr.InternalServerError)
+		return status.Error(codes.Internal, helper.InternalServerError)
 	}
 
 	return req.SendAndClose(&storage.UploadResponse{FileId: fileId})

@@ -11,7 +11,12 @@ import (
 	"github.com/Makovey/go-keeper/internal/config"
 )
 
-const tokenExp = time.Hour * 24
+type Key string
+
+const (
+	CtxUserIDKey Key = "UserID"
+	tokenExp         = time.Hour * 24
+)
 
 var (
 	ErrSigningMethod = errors.New("unexpected signing method")
