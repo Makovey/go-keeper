@@ -59,7 +59,18 @@ func (m *Model) View() string {
 	case signIn:
 		b.WriteString(m.signInPage.email.View() + "\n")
 		b.WriteString(m.signInPage.password.View() + "\n")
+	case upload:
+		if m.uploadPage.selectedFile == "" {
+			b.WriteString("Pick a file: \n\n")
+		} else {
+			b.WriteString("Selected file: " +
+				m.uploadPage.picker.Styles.Selected.Render(m.uploadPage.selectedFile) +
+				"\n\n",
+			)
+		}
+		b.WriteString(m.uploadPage.picker.View() + "\n")
 	}
+
 	b.WriteString(showErrorIfNeeded(m.clientErr))
 
 	return docStyle.Render(b.String() + "\n")

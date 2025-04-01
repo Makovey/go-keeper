@@ -2,8 +2,10 @@ package ui
 
 import (
 	"errors"
+	"path/filepath"
 	"unicode/utf8"
 
+	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
@@ -54,6 +56,17 @@ func passwordInput() textinput.Model {
 	p.EchoMode = textinput.EchoPassword
 	p.CharLimit = 50
 	p.Validate = validate
+
+	return p
+}
+
+func filePicker() filepicker.Model {
+	p := filepicker.New()
+	absPath, _ := filepath.Abs(".")
+	p.CurrentDirectory = absPath
+	p.ShowPermissions = false
+	p.ShowHidden = true
+	p.Height = 10
 
 	return p
 }

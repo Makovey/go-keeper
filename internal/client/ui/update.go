@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -30,9 +31,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.step {
 			case startedList:
 				return m, tea.Quit
-			default:
+			case signUp:
 				m.step = startedList
 				return m, nil
+			case signIn:
+				m.step = startedList
+				return m, nil
+			default:
+				return m, tea.Quit
 			}
 		case enter:
 			switch m.step {
@@ -62,7 +68,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.clientErr = err
 					return m, nil
 				}
-				return m, tea.Quit
+				m.step = upload
 			case signIn:
 				if !m.isPageValid() {
 					return m, nil
@@ -73,6 +79,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.clientErr = err
 					return m, nil
 				}
+				m.step = upload
+			case upload:
 				return m, tea.Quit
 			}
 		case tab:
@@ -98,6 +106,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					in := []*textinput.Model{&m.signInPage.password}
 					makeActiveInput(&m.signInPage.email, in)
 				}
+			case upload:
+				return m, nil
 			default:
 				break
 			}
@@ -158,6 +168,17 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 			m.signInPage.email, cmd = m.signInPage.email.Update(msg)
 		case m.signInPage.password.Focused():
 			m.signInPage.password, cmd = m.signInPage.password.Update(msg)
+		}
+	case upload:
+		m.uploadPage.picker, cmd = m.uploadPage.picker.Update(msg)
+
+		if didSelect, path := m.uploadPage.picker.DidSelectFile(msg); didSelect {
+			m.uploadPage.selectedFile = path
+		}
+
+		if didSelect, path := m.uploadPage.picker.DidSelectDisabledFile(msg); didSelect {
+			m.clientErr = errors.New(path + " is not valid.")
+			m.uploadPage.selectedFile = ""
 		}
 	}
 

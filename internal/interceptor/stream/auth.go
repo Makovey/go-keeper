@@ -23,6 +23,7 @@ const (
 var exceptMethods = []string{
 	"RegisterUser",
 	"LoginUser",
+	"ServerReflectionInfo", // reflection debug mode
 }
 
 func JWTAuth(

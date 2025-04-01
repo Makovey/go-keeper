@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -10,6 +11,11 @@ import (
 
 func Logger(log logger.Logger) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		method := strings.Split(info.FullMethod, "/")[len(strings.Split(info.FullMethod, "/"))-1]
+		if method == "ServerReflectionInfo" {
+			return nil
+		}
+
 		log.Infof("[%s]: stream started", info.FullMethod)
 
 		startTime := time.Now()

@@ -57,8 +57,8 @@ func (a *App) Run() {
 	wg.Add(1)
 	go a.runGRPCServer(ctx, &wg)
 
-	//wg.Add(1)
-	//go a.runUI(ctx, &wg)
+	wg.Add(1)
+	go a.runUI(ctx, &wg)
 
 	wg.Wait()
 }
@@ -121,7 +121,7 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	conn, err := grpc.NewClient(
-		"localhost"+a.cfg.GRPCPort(),
+		"localhost"+a.cfg.GRPCPort(), // TODO: to cfg
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

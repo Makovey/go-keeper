@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,6 +16,7 @@ const (
 	startedList step = iota
 	signUp
 	signIn
+	upload
 )
 
 type starterPage struct {
@@ -32,11 +34,17 @@ type signInPage struct {
 	password textinput.Model
 }
 
+type uploadPage struct {
+	picker       filepicker.Model
+	selectedFile string
+}
+
 type Model struct {
 	step        step
 	startedPage starterPage
 	signUpPage  signUpPage
 	signInPage  signInPage
+	uploadPage  uploadPage
 	client      *grpc.AuthClient
 	clientErr   error
 }
@@ -48,10 +56,11 @@ func InitialModel(client *grpc.AuthClient) *Model {
 	password := passwordInput()
 
 	return &Model{
-		step:        startedList,
+		step:        upload,
 		startedPage: starterPage{l},
 		signUpPage:  signUpPage{name: name, email: email, password: password},
 		signInPage:  signInPage{email: email, password: password},
+		uploadPage:  uploadPage{picker: filePicker()},
 		client:      client,
 	}
 }
@@ -72,5 +81,5 @@ func (m *Model) GetLoginData() *model.Login {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return m.uploadPage.picker.Init()
 }
