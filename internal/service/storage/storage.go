@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
 
 	"github.com/Makovey/go-keeper/internal/config"
@@ -65,19 +66,13 @@ func (s *service) UploadFile(ctx context.Context, file model.File, userID string
 }
 
 func formatFileSize(bytes int) string {
-	const (
-		KB = 1000
-		MB = KB * 1000
-		GB = MB * 1000
-	)
-
 	switch {
-	case bytes >= GB:
-		return fmt.Sprintf("%.1f GB", float64(bytes)/GB)
-	case bytes >= MB:
-		return fmt.Sprintf("%.1f MB", float64(bytes)/MB)
-	case bytes >= KB:
-		return fmt.Sprintf("%.1f KB", float64(bytes)/KB)
+	case bytes >= humanize.GByte:
+		return fmt.Sprintf("%.1f GB", float64(bytes)/humanize.GByte)
+	case bytes >= humanize.MByte:
+		return fmt.Sprintf("%.1f MB", float64(bytes)/humanize.MByte)
+	case bytes >= humanize.KByte:
+		return fmt.Sprintf("%.1f KB", float64(bytes)/humanize.KByte)
 	default:
 		return fmt.Sprintf("%d B", bytes)
 	}

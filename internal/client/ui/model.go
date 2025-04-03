@@ -40,16 +40,20 @@ type uploadPage struct {
 }
 
 type Model struct {
-	step        step
-	startedPage starterPage
-	signUpPage  signUpPage
-	signInPage  signInPage
-	uploadPage  uploadPage
-	client      *grpc.AuthClient
-	clientErr   error
+	step          step
+	startedPage   starterPage
+	signUpPage    signUpPage
+	signInPage    signInPage
+	uploadPage    uploadPage
+	auth          *grpc.AuthClient
+	storage       *grpc.StorageClient
+	clientMessage error
 }
 
-func InitialModel(client *grpc.AuthClient) *Model {
+func InitialModel(
+	auth *grpc.AuthClient,
+	storage *grpc.StorageClient,
+) *Model {
 	l := mainList()
 	name := nameInput()
 	email := emailInput()
@@ -61,7 +65,8 @@ func InitialModel(client *grpc.AuthClient) *Model {
 		signUpPage:  signUpPage{name: name, email: email, password: password},
 		signInPage:  signInPage{email: email, password: password},
 		uploadPage:  uploadPage{picker: filePicker()},
-		client:      client,
+		auth:        auth,
+		storage:     storage,
 	}
 }
 

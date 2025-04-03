@@ -130,9 +130,10 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	defer conn.Close()
 
-	cl := client.NewAuthClient(conn, a.log)
+	authClient := client.NewAuthClient(conn, a.log)
+	storageClient := client.NewStorageClient(conn, a.log)
 
-	p := tea.NewProgram(ui.InitialModel(cl), tea.WithAltScreen())
+	p := tea.NewProgram(ui.InitialModel(authClient, storageClient), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		a.log.Infof("[%s]: can't run ui program, cause: %v", fn, err)
 		return

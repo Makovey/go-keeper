@@ -16,6 +16,8 @@ var (
 	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	focusedStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	errorStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	successStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("20"))
 	noStyle           = lipgloss.NewStyle()
 )
 
@@ -61,22 +63,22 @@ func (m *Model) View() string {
 		b.WriteString(m.signInPage.password.View() + "\n")
 	case upload:
 		if m.uploadPage.selectedFile == "" {
-			b.WriteString("Pick a file: \n\n")
+			b.WriteString("Pick a file: \n")
 		} else {
 			b.WriteString("Selected file: " +
-				m.uploadPage.picker.Styles.Selected.Render(m.uploadPage.selectedFile) +
-				"\n\n",
+				m.uploadPage.picker.Styles.Selected.Render(m.uploadPage.selectedFile) + "\n" +
+				"<< - select this file one more time, to confirm uploading\n",
 			)
 		}
-		b.WriteString(m.uploadPage.picker.View() + "\n")
+		b.WriteString("\n" + m.uploadPage.picker.View() + "\n")
 	}
 
-	b.WriteString(showErrorIfNeeded(m.clientErr))
+	b.WriteString(showMessageIfNeeded(m.clientMessage))
 
 	return docStyle.Render(b.String() + "\n")
 }
 
-func showErrorIfNeeded(err error) string {
+func showMessageIfNeeded(err error) string {
 	if err == nil {
 		return ""
 	}
@@ -84,10 +86,8 @@ func showErrorIfNeeded(err error) string {
 	re := regexp.MustCompile(`desc\s*=\s*(.*)`)
 	matches := re.FindStringSubmatch(err.Error())
 	if len(matches) > 1 {
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("9")).
-			Render("\n>> " + matches[1])
+		return errorStyle.Render("\n>> " + matches[1] + "\n\n")
 	}
 
-	return err.Error()
+	return successStyle.Render("\n>> " + err.Error() + "\n\n")
 }

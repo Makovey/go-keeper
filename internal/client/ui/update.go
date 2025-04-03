@@ -25,7 +25,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		m.clientErr = nil
+		m.clientMessage = nil
 		switch keypress := msg.String(); keypress {
 		case cancel:
 			switch m.step {
@@ -63,9 +63,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				err := m.client.Register(context.TODO(), m.GetRegisterUserData())
+				err := m.auth.Register(context.TODO(), m.GetRegisterUserData())
 				if err != nil {
-					m.clientErr = err
+					m.clientMessage = err
 					return m, nil
 				}
 				m.step = upload
@@ -74,14 +74,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				err := m.client.Login(context.TODO(), m.GetLoginData())
+				err := m.auth.Login(context.TODO(), m.GetLoginData())
 				if err != nil {
-					m.clientErr = err
+					m.clientMessage = err
 					return m, nil
 				}
 				m.step = upload
 			case upload:
-				return m, tea.Quit
+				if m.uploadPage.selectedFile != "" {
+					err := m.storage.UploadFile(context.Background(), m.uploadPage.selectedFile)
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.clientMessage = errors.New("file uploaded successfully")
+				}
 			}
 		case tab:
 			switch m.step {
@@ -112,39 +119,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 		}
+		m.uploadPage.selectedFile = ""
 	}
 
 	return m, m.updateModelValue(msg)
-}
-
-func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {
-	active.Focus()
-	active.TextStyle = focusedStyle
-	active.PromptStyle = focusedStyle
-
-	for _, i := range inactive {
-		i.Blur()
-		i.TextStyle = noStyle
-		i.PromptStyle = noStyle
-	}
-}
-
-func (m *Model) isPageValid() bool {
-	switch m.step {
-	case signUp:
-		return isInputValid(m.signUpPage.name) &&
-			isInputValid(m.signUpPage.email) &&
-			isInputValid(m.signUpPage.password)
-	case signIn:
-		return isInputValid(m.signInPage.email) &&
-			isInputValid(m.signInPage.password)
-	default:
-		return true
-	}
-}
-
-func isInputValid(input textinput.Model) bool {
-	return utf8.RuneCountInString(input.Value()) != 0
 }
 
 func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
@@ -177,10 +155,40 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 		}
 
 		if didSelect, path := m.uploadPage.picker.DidSelectDisabledFile(msg); didSelect {
-			m.clientErr = errors.New(path + " is not valid.")
+			m.clientMessage = errors.New(path + " is not valid.")
 			m.uploadPage.selectedFile = ""
 		}
 	}
 
 	return cmd
+}
+
+func (m *Model) isPageValid() bool {
+	switch m.step {
+	case signUp:
+		return isInputValid(m.signUpPage.name) &&
+			isInputValid(m.signUpPage.email) &&
+			isInputValid(m.signUpPage.password)
+	case signIn:
+		return isInputValid(m.signInPage.email) &&
+			isInputValid(m.signInPage.password)
+	default:
+		return true
+	}
+}
+
+func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {
+	active.Focus()
+	active.TextStyle = focusedStyle
+	active.PromptStyle = focusedStyle
+
+	for _, i := range inactive {
+		i.Blur()
+		i.TextStyle = noStyle
+		i.PromptStyle = noStyle
+	}
+}
+
+func isInputValid(input textinput.Model) bool {
+	return utf8.RuneCountInString(input.Value()) != 0
 }

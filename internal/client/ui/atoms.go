@@ -66,7 +66,7 @@ func filePicker() filepicker.Model {
 	p.CurrentDirectory = absPath
 	p.ShowPermissions = false
 	p.ShowHidden = true
-	p.Height = 10
+	p.Height = 12
 
 	return p
 }
