@@ -17,7 +17,7 @@ var (
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	focusedStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	errorStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	successStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("20"))
+	successStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("30"))
 	noStyle           = lipgloss.NewStyle()
 )
 
@@ -86,8 +86,8 @@ func showMessageIfNeeded(err error) string {
 	re := regexp.MustCompile(`desc\s*=\s*(.*)`)
 	matches := re.FindStringSubmatch(err.Error())
 	if len(matches) > 1 {
-		return errorStyle.Render("\n>> " + matches[1] + "\n\n")
+		return errorStyle.Render("\n>> " + matches[1] + "\n")
 	}
 
-	return successStyle.Render("\n>> " + err.Error() + "\n\n")
+	return successStyle.Render("\n>> " + err.Error() + "\n")
 }

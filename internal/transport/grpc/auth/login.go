@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/service"
@@ -16,13 +15,13 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 )
 
-func (s *Server) LoginUser(ctx context.Context, req *auth.LoginRequest) (*emptypb.Empty, error) {
+func (s *Server) LoginUser(ctx context.Context, req *auth.LoginRequest) (*auth.AuthResponse, error) {
 	fn := "auth.LoginUser"
 
 	login := mapper.ToLoginFromProto(req)
 
 	if err := login.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return &auth.AuthResponse{}, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	token, err := s.service.LoginUser(ctx, login)
@@ -30,18 +29,18 @@ func (s *Server) LoginUser(ctx context.Context, req *auth.LoginRequest) (*emptyp
 		s.log.Errorf("[%s]: %v", fn, err.Error())
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			return nil, status.Error(codes.InvalidArgument, "email not found")
+			return &auth.AuthResponse{}, status.Error(codes.InvalidArgument, "email not found")
 		case errors.Is(err, service.ErrIncorrectPassword):
-			return nil, status.Error(codes.InvalidArgument, "incorrect password")
+			return &auth.AuthResponse{}, status.Error(codes.InvalidArgument, "incorrect password")
 		}
-		return nil, status.Error(codes.Internal, grpcerr.InternalServerError)
+		return &auth.AuthResponse{}, status.Error(codes.Internal, grpcerr.InternalServerError)
 	}
 
 	md := metadata.New(map[string]string{"jwt": token})
 	if err = grpc.SetHeader(ctx, md); err != nil {
 		s.log.Errorf("[%s]: %v", fn, err.Error())
-		return nil, status.Error(codes.Internal, grpcerr.InternalServerError)
+		return &auth.AuthResponse{}, status.Error(codes.Internal, grpcerr.InternalServerError)
 	}
 
-	return nil, nil
+	return &auth.AuthResponse{Token: token}, nil
 }

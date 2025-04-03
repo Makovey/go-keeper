@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -63,26 +64,30 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				err := m.auth.Register(context.TODO(), m.GetRegisterUserData())
+				token, err := m.auth.Register(context.TODO(), m.GetRegisterUserData())
 				if err != nil {
 					m.clientMessage = err
 					return m, nil
 				}
+				m.token = token
 				m.step = upload
+				return m, m.uploadPage.picker.Init()
 			case signIn:
 				if !m.isPageValid() {
 					return m, nil
 				}
 
-				err := m.auth.Login(context.TODO(), m.GetLoginData())
+				token, err := m.auth.Login(context.TODO(), m.GetLoginData())
 				if err != nil {
 					m.clientMessage = err
 					return m, nil
 				}
+				m.token = token
 				m.step = upload
+				return m, m.uploadPage.picker.Init()
 			case upload:
 				if m.uploadPage.selectedFile != "" {
-					err := m.storage.UploadFile(context.Background(), m.uploadPage.selectedFile)
+					err := m.storage.UploadFile(m.setTokenToCtx(context.TODO()), m.uploadPage.selectedFile)
 					if err != nil {
 						m.clientMessage = err
 						return m, nil
@@ -161,6 +166,11 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 	}
 
 	return cmd
+}
+
+func (m *Model) setTokenToCtx(ctx context.Context) context.Context {
+	md := metadata.New(map[string]string{"jwt": m.token})
+	return metadata.NewOutgoingContext(ctx, md)
 }
 
 func (m *Model) isPageValid() bool {

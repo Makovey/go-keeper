@@ -47,6 +47,7 @@ type Model struct {
 	uploadPage    uploadPage
 	auth          *grpc.AuthClient
 	storage       *grpc.StorageClient
+	token         string
 	clientMessage error
 }
 
@@ -60,7 +61,7 @@ func InitialModel(
 	password := passwordInput()
 
 	return &Model{
-		step:        upload,
+		step:        startedList,
 		startedPage: starterPage{l},
 		signUpPage:  signUpPage{name: name, email: email, password: password},
 		signInPage:  signInPage{email: email, password: password},
@@ -86,5 +87,5 @@ func (m *Model) GetLoginData() *model.Login {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return m.uploadPage.picker.Init()
+	return nil
 }

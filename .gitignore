@@ -24,4 +24,6 @@ go.work.sum
 # env file
 .env
 
+#temp
 .idea
+1storage

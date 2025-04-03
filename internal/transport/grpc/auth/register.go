@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/service"
@@ -16,13 +15,13 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 )
 
-func (s *Server) RegisterUser(ctx context.Context, req *auth.User) (*emptypb.Empty, error) {
+func (s *Server) RegisterUser(ctx context.Context, req *auth.User) (*auth.AuthResponse, error) {
 	fn := "auth.RegisterUser"
 
 	user := mapper.ToUserFromProto(req)
 
 	if err := user.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return &auth.AuthResponse{}, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	token, err := s.service.RegisterUser(ctx, user)
@@ -30,16 +29,16 @@ func (s *Server) RegisterUser(ctx context.Context, req *auth.User) (*emptypb.Emp
 		s.log.Errorf("[%s]: %v", fn, err.Error())
 		switch {
 		case errors.Is(err, service.ErrUserAlreadyExists):
-			return nil, status.Error(codes.AlreadyExists, "email already registered")
+			return &auth.AuthResponse{}, status.Error(codes.AlreadyExists, "email already registered")
 		}
-		return nil, status.Error(codes.Internal, grpcerr.InternalServerError)
+		return &auth.AuthResponse{}, status.Error(codes.Internal, grpcerr.InternalServerError)
 	}
 
 	md := metadata.New(map[string]string{"jwt": token})
 	if err = grpc.SetHeader(ctx, md); err != nil {
 		s.log.Errorf("[%s]: %v", fn, err.Error())
-		return nil, status.Error(codes.Internal, grpcerr.InternalServerError)
+		return &auth.AuthResponse{}, status.Error(codes.Internal, grpcerr.InternalServerError)
 	}
 
-	return nil, nil
+	return &auth.AuthResponse{Token: token}, nil
 }

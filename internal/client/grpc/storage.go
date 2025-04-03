@@ -9,15 +9,12 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
-	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
 )
 
 type StorageClient struct {
-	cfg    config.Config
 	log    logger.Logger
 	client storage.StorageServiceClient
 }
@@ -38,9 +35,6 @@ func (s *StorageClient) UploadFile(
 	path string,
 ) error {
 	fn := "grpc.UploadFile"
-
-	md := metadata.New(map[string]string{"jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDM3MDgzMjgsIlVzZXJJRCI6ImM5MDllMTdkLTg0MzMtNGI4ZC05ZDE2LTFiZmY2NzVmNGEzNiJ9.5U2UHDDSfzVxjPnN4sCkuHTrf1jllmPSF4EgfSP2tH4"})
-	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	file, err := os.Open(path)
 	if err != nil {
