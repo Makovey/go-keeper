@@ -130,8 +130,8 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	defer conn.Close()
 
-	authClient := client.NewAuthClient(conn, a.log)
-	storageClient := client.NewStorageClient(conn, a.log)
+	authClient := client.NewAuthClient(a.log, grpcAuth.NewAuthClient(conn))
+	storageClient := client.NewStorageClient(a.log, grpcStorage.NewStorageServiceClient(conn))
 
 	p := tea.NewProgram(ui.InitialModel(authClient, storageClient), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {

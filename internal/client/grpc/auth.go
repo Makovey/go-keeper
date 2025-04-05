@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	"github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
@@ -18,13 +16,13 @@ type AuthClient struct {
 }
 
 func NewAuthClient(
-	conn *grpc.ClientConn,
 	log logger.Logger,
+	client auth.AuthClient,
 ) *AuthClient {
 
 	return &AuthClient{
 		log:    log,
-		client: auth.NewAuthClient(conn),
+		client: client,
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/dustin/go-humanize"
-	"google.golang.org/grpc"
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
@@ -20,13 +19,13 @@ type StorageClient struct {
 }
 
 func NewStorageClient(
-	conn *grpc.ClientConn,
 	log logger.Logger,
+	client storage.StorageServiceClient,
 ) *StorageClient {
 
 	return &StorageClient{
 		log:    log,
-		client: storage.NewStorageServiceClient(conn),
+		client: client,
 	}
 }
 
