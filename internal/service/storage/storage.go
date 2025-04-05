@@ -15,27 +15,30 @@ import (
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
 
+//go:generate mockgen -source=storage.go -destination=../../repository/mock/file_storager_mock.go -package=mock
 type FileStorager interface {
 	Save(path, fileName string, data bytes.Reader) error
 }
 
+// RepositoryStorage NOTE: префикс Storage, чтобы не было коллизии имен при генерации моков
+//
 //go:generate mockgen -source=storage.go -destination=../../repository/mock/storage_repository_mock.go -package=mock
-type Repository interface {
+type RepositoryStorage interface {
 	SaveFileMetadata(ctx context.Context, fileData *entity.File) error
 }
 
 type service struct {
-	repo     Repository
+	repo     RepositoryStorage
 	storager FileStorager
 	cfg      config.Config
 	log      logger.Logger
 }
 
 func NewStorageService(
-	repo Repository,
+	repo RepositoryStorage,
 	storager FileStorager,
 	log logger.Logger,
-) storage.Service {
+) storage.ServiceStorage {
 	return &service{
 		repo:     repo,
 		storager: storager,

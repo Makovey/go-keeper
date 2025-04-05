@@ -55,7 +55,7 @@ func Test_service_RegisterUser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repoMock := mock.NewMockAuthRepository(ctrl)
+			repoMock := mock.NewMockRepository(ctrl)
 			repoMock.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
 
 			cfg := stub.NewStubConfig()
@@ -111,14 +111,14 @@ func Test_service_LoginUser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repoMock := mock.NewMockAuthRepository(ctrl)
+			repoMock := mock.NewMockRepository(ctrl)
 			repoMock.EXPECT().GetUserInfo(gomock.Any(), tt.args.login.Email).Return(tt.expects.repoAnswer, tt.expects.repoError).Times(1)
 
 			pass, _ := bcrypt.GenerateFromPassword([]byte(tt.expects.repoAnswer.PasswordHash), bcrypt.DefaultCost)
 			tt.expects.repoAnswer.PasswordHash = string(pass)
 
 			cfg := stub.NewStubConfig()
-			s := NewAuthService(repoMock, jwt.NewManager(cfg), cfg, dummy.NewDummyLogger())
+			s := NewAuthService(repoMock, jwt.NewManager(cfg), dummy.NewDummyLogger())
 			got, err := s.LoginUser(context.Background(), tt.args.login)
 			if tt.wantErr {
 				assert.Error(t, err)
