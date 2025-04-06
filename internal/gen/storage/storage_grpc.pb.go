@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	StorageService_UploadFile_FullMethodName = "/storage.StorageService/UploadFile"
+	StorageService_UploadFile_FullMethodName   = "/storage.StorageService/UploadFile"
+	StorageService_DownloadFile_FullMethodName = "/storage.StorageService/DownloadFile"
 )
 
 // StorageServiceClient is the client API for StorageService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageServiceClient interface {
 	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadResponse], error)
+	DownloadFile(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadResponse], error)
 }
 
 type storageServiceClient struct {
@@ -50,11 +52,31 @@ func (c *storageServiceClient) UploadFile(ctx context.Context, opts ...grpc.Call
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StorageService_UploadFileClient = grpc.ClientStreamingClient[UploadRequest, UploadResponse]
 
+func (c *storageServiceClient) DownloadFile(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &StorageService_ServiceDesc.Streams[1], StorageService_DownloadFile_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[DownloadRequest, DownloadResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type StorageService_DownloadFileClient = grpc.ServerStreamingClient[DownloadResponse]
+
 // StorageServiceServer is the server API for StorageService service.
 // All implementations must embed UnimplementedStorageServiceServer
 // for forward compatibility.
 type StorageServiceServer interface {
 	UploadFile(grpc.ClientStreamingServer[UploadRequest, UploadResponse]) error
+	DownloadFile(*DownloadRequest, grpc.ServerStreamingServer[DownloadResponse]) error
 	mustEmbedUnimplementedStorageServiceServer()
 }
 
@@ -67,6 +89,9 @@ type UnimplementedStorageServiceServer struct{}
 
 func (UnimplementedStorageServiceServer) UploadFile(grpc.ClientStreamingServer[UploadRequest, UploadResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
+}
+func (UnimplementedStorageServiceServer) DownloadFile(*DownloadRequest, grpc.ServerStreamingServer[DownloadResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
 }
 func (UnimplementedStorageServiceServer) mustEmbedUnimplementedStorageServiceServer() {}
 func (UnimplementedStorageServiceServer) testEmbeddedByValue()                        {}
@@ -96,6 +121,17 @@ func _StorageService_UploadFile_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type StorageService_UploadFileServer = grpc.ClientStreamingServer[UploadRequest, UploadResponse]
 
+func _StorageService_DownloadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DownloadRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(StorageServiceServer).DownloadFile(m, &grpc.GenericServerStream[DownloadRequest, DownloadResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type StorageService_DownloadFileServer = grpc.ServerStreamingServer[DownloadResponse]
+
 // StorageService_ServiceDesc is the grpc.ServiceDesc for StorageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -108,6 +144,11 @@ var StorageService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "UploadFile",
 			Handler:       _StorageService_UploadFile_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "DownloadFile",
+			Handler:       _StorageService_DownloadFile_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "storage.proto",

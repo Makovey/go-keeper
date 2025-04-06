@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 
@@ -46,7 +47,7 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 	}
 
 	f := model.File{
-		Data:     *bytes.NewReader(buf.Bytes()),
+		Data:     *bufio.NewReader(bytes.NewReader(buf.Bytes())),
 		FileName: fileName,
 		FileSize: fileSize,
 	}

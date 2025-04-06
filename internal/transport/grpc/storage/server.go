@@ -11,6 +11,7 @@ import (
 //go:generate mockgen -source=server.go -destination=../../../service/mock/storage_service_mock.go -package=mock
 type ServiceStorage interface {
 	UploadFile(ctx context.Context, file model.File, userID string) (string, error)
+	DownloadFile(ctx context.Context, userID, fileID string) (*model.File, error)
 }
 
 type Server struct {

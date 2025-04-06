@@ -2,7 +2,6 @@ package file_storager
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -12,7 +11,7 @@ import (
 	"github.com/Makovey/go-keeper/internal/service/storage"
 )
 
-const rootDirForStorage = "1storage" // TODO: to cfg
+const rootDirForStorage = "fileStorage"
 
 type diskStorager struct {
 	log logger.Logger
@@ -28,7 +27,7 @@ func NewDiskStorager(
 	}
 }
 
-func (d *diskStorager) Save(path, fileName string, data bytes.Reader) error {
+func (d *diskStorager) Save(path, fileName string, data *bufio.Reader) error {
 	fn := "file_storager.Save"
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -47,12 +46,28 @@ func (d *diskStorager) Save(path, fileName string, data bytes.Reader) error {
 	bufWriter := bufio.NewWriter(file)
 	defer bufWriter.Flush()
 
-	_, err = io.Copy(bufWriter, &data)
+	_, err = io.Copy(bufWriter, data)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to write data: %v", fn, err)
 	}
 
 	return nil
+}
+
+func (d *diskStorager) Get(path string, size int) (*bufio.Reader, error) {
+	fn := "file_storager.Get"
+
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	fullPath := fmt.Sprintf("./%s/%s", rootDirForStorage, path)
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: can't open file: %v", fn, err)
+	}
+	defer file.Close()
+
+	return bufio.NewReaderSize(file, size), nil
 }
 
 func createDirIfNeeded(path string) error {

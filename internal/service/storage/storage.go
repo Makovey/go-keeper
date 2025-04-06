@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"bytes"
+	"bufio"
 	"context"
 	"fmt"
 
@@ -17,7 +17,8 @@ import (
 
 //go:generate mockgen -source=storage.go -destination=../../repository/mock/file_storager_mock.go -package=mock
 type FileStorager interface {
-	Save(path, fileName string, data bytes.Reader) error
+	Save(path, fileName string, data *bufio.Reader) error
+	Get(path string, size int) (*bufio.Reader, error)
 }
 
 // RepositoryStorage NOTE: префикс Storage, чтобы не было коллизии имен при генерации моков
@@ -25,6 +26,7 @@ type FileStorager interface {
 //go:generate mockgen -source=storage.go -destination=../../repository/mock/storage_repository_mock.go -package=mock
 type RepositoryStorage interface {
 	SaveFileMetadata(ctx context.Context, fileData *entity.File) error
+	GetFileMetadata(ctx context.Context, userID, fileID string) (*entity.File, error)
 }
 
 type service struct {
@@ -53,11 +55,11 @@ func (s *service) UploadFile(ctx context.Context, file model.File, userID string
 		ID:       uuid.NewString(),
 		OwnerID:  userID,
 		FileName: file.FileName,
-		FileSize: formatFileSize(file.FileSize),
+		FileSize: file.FileSize,
 		Path:     fmt.Sprintf("%s/%s", userID, file.FileName),
 	}
 
-	if err := s.storager.Save(userID, file.FileName, file.Data); err != nil {
+	if err := s.storager.Save(userID, file.FileName, &file.Data); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
@@ -66,6 +68,22 @@ func (s *service) UploadFile(ctx context.Context, file model.File, userID string
 	}
 
 	return eFile.ID, nil
+}
+
+func (s *service) DownloadFile(ctx context.Context, userID, fileID string) (*model.File, error) {
+	fn := "storage.DownloadFile"
+
+	file, err := s.repo.GetFileMetadata(ctx, userID, fileID)
+	if err != nil {
+		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
+	}
+
+	reader, err := s.storager.Get(file.Path, file.FileSize)
+	if err != nil {
+		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
+	}
+
+	return &model.File{Data: *reader, FileName: file.FileName, FileSize: file.FileSize}, nil
 }
 
 func formatFileSize(bytes int) string {

@@ -6,6 +6,7 @@ option go_package = "github.com/Makovey/internal/gen/storage";
 
 service StorageService {
   rpc UploadFile(stream UploadRequest) returns (UploadResponse);
+  rpc DownloadFile(DownloadRequest) returns(stream DownloadResponse);
 }
 
 message UploadRequest {
@@ -15,4 +16,13 @@ message UploadRequest {
 
 message UploadResponse {
   string file_id = 1;
+}
+
+message DownloadRequest {
+  string file_id = 1;
+}
+
+message DownloadResponse {
+  bytes chunk_data = 1;
+  string filename = 2;
 }

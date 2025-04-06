@@ -1,9 +1,11 @@
 package model
 
-import "bytes"
+import (
+	"bufio"
+)
 
 type File struct {
-	Data     bytes.Reader
+	Data     bufio.Reader
 	FileName string
 	FileSize int
 }

@@ -7,4 +7,5 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 	ErrUserNotFound      = errors.New("user not found")
 	ErrIncorrectPassword = errors.New("incorrect password")
+	ErrFileNotFound      = errors.New("file not found")
 )
