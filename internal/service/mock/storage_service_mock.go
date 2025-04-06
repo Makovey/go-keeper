@@ -35,6 +35,36 @@ func (m *MockServiceStorage) EXPECT() *MockServiceStorageMockRecorder {
 	return m.recorder
 }
 
+// DownloadFile mocks base method.
+func (m *MockServiceStorage) DownloadFile(ctx context.Context, userID, fileID string) (*model.File, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DownloadFile", ctx, userID, fileID)
+	ret0, _ := ret[0].(*model.File)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DownloadFile indicates an expected call of DownloadFile.
+func (mr *MockServiceStorageMockRecorder) DownloadFile(ctx, userID, fileID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadFile", reflect.TypeOf((*MockServiceStorage)(nil).DownloadFile), ctx, userID, fileID)
+}
+
+// GetUsersFiles mocks base method.
+func (m *MockServiceStorage) GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersFiles", ctx, userID)
+	ret0, _ := ret[0].([]*model.ExtendedInfoFile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersFiles indicates an expected call of GetUsersFiles.
+func (mr *MockServiceStorageMockRecorder) GetUsersFiles(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersFiles", reflect.TypeOf((*MockServiceStorage)(nil).GetUsersFiles), ctx, userID)
+}
+
 // UploadFile mocks base method.
 func (m *MockServiceStorage) UploadFile(ctx context.Context, file model.File, userID string) (string, error) {
 	m.ctrl.T.Helper()

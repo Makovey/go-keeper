@@ -60,3 +60,34 @@ func (r *Repo) GetFileMetadata(ctx context.Context, userID, fileID string) (*ent
 
 	return &file, nil
 }
+
+func (r *Repo) GetUsersFiles(ctx context.Context, userID string) ([]*entity.File, error) {
+	fn := "postgres.GetUsersFiles"
+
+	rows, err := r.db.Query(
+		ctx,
+		`SELECT id, file_name, file_size, created_at FROM files_metadata WHERE owner_user_id = $1`,
+		userID,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
+	}
+	defer rows.Close()
+
+	var files []*entity.File
+	for rows.Next() {
+		var file entity.File
+		err = rows.Scan(&file.ID, &file.FileName, &file.FileSize, &file.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("[%s]: %w", fn, err)
+		}
+		files = append(files, &file)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return files, nil
+}

@@ -12,6 +12,7 @@ import (
 type ServiceStorage interface {
 	UploadFile(ctx context.Context, file model.File, userID string) (string, error)
 	DownloadFile(ctx context.Context, userID, fileID string) (*model.File, error)
+	GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error)
 }
 
 type Server struct {

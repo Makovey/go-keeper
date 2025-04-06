@@ -16,14 +16,9 @@ const (
 	listHeight   = 12
 )
 
-func mainList() list.Model {
-	items := []list.Item{
-		item("Sign Up"),
-		item("Sign In"),
-	}
-
+func mainList(title string, items []list.Item) list.Model {
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Welcome to auth, choose option:"
+	l.Title = title
 	l.Styles.Title = lipgloss.NewStyle().Bold(true).Underline(true)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)

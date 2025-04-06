@@ -9,13 +9,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Makovey/go-keeper/internal/config"
-	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
 
-//go:generate mockgen -source=storage.go -destination=../../repository/mock/file_storager_mock.go -package=mock
 type FileStorager interface {
 	Save(path, fileName string, data *bufio.Reader) error
 	Get(path string, size int) (*bufio.Reader, error)
@@ -27,24 +25,22 @@ type FileStorager interface {
 type RepositoryStorage interface {
 	SaveFileMetadata(ctx context.Context, fileData *entity.File) error
 	GetFileMetadata(ctx context.Context, userID, fileID string) (*entity.File, error)
+	GetUsersFiles(ctx context.Context, userID string) ([]*entity.File, error)
 }
 
 type service struct {
 	repo     RepositoryStorage
 	storager FileStorager
 	cfg      config.Config
-	log      logger.Logger
 }
 
 func NewStorageService(
 	repo RepositoryStorage,
 	storager FileStorager,
-	log logger.Logger,
 ) storage.ServiceStorage {
 	return &service{
 		repo:     repo,
 		storager: storager,
-		log:      log,
 	}
 }
 
@@ -84,6 +80,27 @@ func (s *service) DownloadFile(ctx context.Context, userID, fileID string) (*mod
 	}
 
 	return &model.File{Data: *reader, FileName: file.FileName, FileSize: file.FileSize}, nil
+}
+
+func (s *service) GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error) {
+	fn := "storage.GetUsersFiles"
+
+	files, err := s.repo.GetUsersFiles(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: %v", fn, err)
+	}
+
+	res := make([]*model.ExtendedInfoFile, 0, len(files))
+	for _, file := range files {
+		res = append(res, &model.ExtendedInfoFile{
+			ID:        file.ID,
+			FileName:  file.FileName,
+			FileSize:  formatFileSize(file.FileSize),
+			CreatedAt: file.CreatedAt,
+		})
+	}
+
+	return res, nil
 }
 
 func formatFileSize(bytes int) string {

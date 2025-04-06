@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 )
@@ -31,4 +32,14 @@ func (s storageClientMock) UploadFile(
 	}
 
 	return s.uploadResponse, nil
+}
+
+func (s storageClientMock) DownloadFile(ctx context.Context, in *storage.DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[storage.DownloadResponse], error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s storageClientMock) GetUsersFile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*storage.GetUsersFileResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }

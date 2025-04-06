@@ -61,6 +61,8 @@ func (m *Model) View() string {
 	case signIn:
 		b.WriteString(m.signInPage.email.View() + "\n")
 		b.WriteString(m.signInPage.password.View() + "\n")
+	case mainMenu:
+		b.WriteString(m.mainMenuPage.list.View())
 	case upload:
 		if m.uploadPage.selectedFile == "" {
 			b.WriteString("Pick a file: \n")

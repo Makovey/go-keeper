@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
 	serviceErrors "github.com/Makovey/go-keeper/internal/service"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
@@ -24,18 +23,15 @@ type Repository interface {
 type service struct {
 	repo Repository
 	jwt  *jwt.Manager
-	log  logger.Logger
 }
 
 func NewAuthService(
 	repo Repository,
 	jwt *jwt.Manager,
-	log logger.Logger,
 ) auth.Service {
 	return &service{
 		repo: repo,
 		jwt:  jwt,
-		log:  log,
 	}
 }
 

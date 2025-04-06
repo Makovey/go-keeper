@@ -41,8 +41,8 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 			return status.Error(codes.Internal, helper.InternalServerError)
 		}
 		fileSize += len(r.ChunkData)
-		if r.Filename != "" {
-			fileName = r.Filename
+		if r.FileName != "" {
+			fileName = r.FileName
 		}
 	}
 

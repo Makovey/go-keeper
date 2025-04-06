@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"testing"
@@ -10,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/repository/mock"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
@@ -35,7 +33,6 @@ func Test_service_UploadFile(t *testing.T) {
 		{
 			name: "successfully save file with metadata",
 			args: args{file: &model.File{
-				Data:     *bytes.NewReader([]byte("hello file")),
 				FileName: "file.txt",
 				FileSize: 50,
 			}},
@@ -43,7 +40,6 @@ func Test_service_UploadFile(t *testing.T) {
 		{
 			name: "fail to upload file: can't create directory",
 			args: args{file: &model.File{
-				Data:     *bytes.NewReader([]byte("hello file")),
 				FileName: "file.txt",
 				FileSize: 50,
 			}},
@@ -53,7 +49,6 @@ func Test_service_UploadFile(t *testing.T) {
 		{
 			name: "fail to upload file: can't create directory",
 			args: args{file: &model.File{
-				Data:     *bytes.NewReader([]byte("hello file")),
 				FileName: "file.txt",
 				FileSize: 50,
 			}},
@@ -67,12 +62,12 @@ func Test_service_UploadFile(t *testing.T) {
 			defer ctrl.Finish()
 
 			storageMock := mock.NewMockFileStorager(ctrl)
-			storageMock.EXPECT().Save(tt.args.userID, tt.args.file.FileName, tt.args.file.Data).Return(tt.expects.storager).AnyTimes()
+			storageMock.EXPECT().Save(tt.args.userID, tt.args.file.FileName, gomock.Any()).Return(tt.expects.storager).AnyTimes()
 
 			repoMock := mock.NewMockRepositoryStorage(ctrl)
 			repoMock.EXPECT().SaveFileMetadata(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
 
-			s := NewStorageService(repoMock, storageMock, dummy.NewDummyLogger())
+			s := NewStorageService(repoMock, storageMock)
 			got, err := s.UploadFile(context.Background(), *tt.args.file, tt.args.userID)
 			if tt.wantErr {
 				assert.Error(t, err)

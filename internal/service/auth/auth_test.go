@@ -11,7 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Makovey/go-keeper/internal/config/stub"
-	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
 	"github.com/Makovey/go-keeper/internal/repository/mock"
 	serviceErr "github.com/Makovey/go-keeper/internal/service"
@@ -59,7 +58,7 @@ func Test_service_RegisterUser(t *testing.T) {
 			repoMock.EXPECT().RegisterUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
 
 			cfg := stub.NewStubConfig()
-			s := NewAuthService(repoMock, jwt.NewManager(cfg), dummy.NewDummyLogger())
+			s := NewAuthService(repoMock, jwt.NewManager(cfg))
 			got, err := s.RegisterUser(context.Background(), tt.args.user)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -118,7 +117,7 @@ func Test_service_LoginUser(t *testing.T) {
 			tt.expects.repoAnswer.PasswordHash = string(pass)
 
 			cfg := stub.NewStubConfig()
-			s := NewAuthService(repoMock, jwt.NewManager(cfg), dummy.NewDummyLogger())
+			s := NewAuthService(repoMock, jwt.NewManager(cfg))
 			got, err := s.LoginUser(context.Background(), tt.args.login)
 			if tt.wantErr {
 				assert.Error(t, err)

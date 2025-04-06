@@ -15,8 +15,12 @@ const (
 	enter  = "enter"
 	tab    = "tab"
 
-	select1 = "Sign Up"
-	select2 = "Sign In"
+	startedListSelect1 = "Sign Up"
+	startedListSelect2 = "Sign In"
+
+	mainMenuSelect1 = "Upload file"
+	mainMenuSelect2 = "Download file"
+	mainMenuSelect3 = "Delete file"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -38,6 +42,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case signIn:
 				m.step = startedList
 				return m, nil
+			case upload:
+				m.step = mainMenu
+				return m, nil
 			default:
 				return m, tea.Quit
 			}
@@ -51,10 +58,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				choice := string(i)
 				switch choice {
-				case select1:
+				case startedListSelect1:
 					m.step = signUp
 					makeActiveInput(&m.signUpPage.name, nil)
-				case select2:
+				case startedListSelect2:
 					m.step = signIn
 					makeActiveInput(&m.signInPage.email, nil)
 				}
@@ -70,8 +77,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.token = token
-				m.step = upload
-				return m, m.uploadPage.picker.Init()
+				m.step = mainMenu
+				return m, nil
 			case signIn:
 				if !m.isPageValid() {
 					return m, nil
@@ -83,8 +90,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.token = token
-				m.step = upload
-				return m, m.uploadPage.picker.Init()
+				m.step = mainMenu
+				return m, nil
+			case mainMenu:
+				i, ok := m.mainMenuPage.list.SelectedItem().(item)
+				if !ok {
+					return m, nil
+				}
+
+				choice := string(i)
+				switch choice {
+				case mainMenuSelect1:
+					m.step = upload
+					return m, m.uploadPage.picker.Init()
+				case mainMenuSelect2:
+					//m.step = signIn
+				case mainMenuSelect3:
+					//m.step = upload
+					//return m, m.uploadPage.picker.Init()
+				}
+				return m, nil
 			case upload:
 				if m.uploadPage.selectedFile != "" {
 					err := m.storage.UploadFile(m.setTokenToCtx(context.TODO()), m.uploadPage.selectedFile)
@@ -152,6 +177,8 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 		case m.signInPage.password.Focused():
 			m.signInPage.password, cmd = m.signInPage.password.Update(msg)
 		}
+	case mainMenu:
+		m.mainMenuPage.list, cmd = m.mainMenuPage.list.Update(msg)
 	case upload:
 		m.uploadPage.picker, cmd = m.uploadPage.picker.Update(msg)
 

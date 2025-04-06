@@ -29,7 +29,7 @@ func (s *Server) DownloadFile(
 	}
 
 	if err = stream.Send(&storage.DownloadResponse{
-		Filename: file.FileName,
+		FileName: file.FileName,
 	}); err != nil {
 		s.log.Errorf("[%s]: %v", fn, err)
 		return status.Errorf(codes.Internal, "failed to send file name: %v", err)

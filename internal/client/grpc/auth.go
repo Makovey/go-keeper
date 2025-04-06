@@ -40,7 +40,7 @@ func (a *AuthClient) Register(ctx context.Context, user *model.User) (string, er
 func (a *AuthClient) Login(ctx context.Context, user *model.Login) (string, error) {
 	fn := "grpc.AuthClient.Login"
 
-	response, err := a.client.LoginUser(ctx, mapper.FromProtoToLogin(user))
+	response, err := a.client.LoginUser(ctx, mapper.ToProtoFromLogin(user))
 	if err != nil {
 		return "", fmt.Errorf("[%s]: %v", fn, err)
 	}

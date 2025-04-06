@@ -37,7 +37,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		{
 			name: "client successfully upload file",
 			args: args{req: &storage.UploadRequest{
-				Filename:  tmpFile.Name(),
+				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
 			},
@@ -46,7 +46,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		{
 			name: "client failed to upload file: can't find file",
 			args: args{req: &storage.UploadRequest{
-				Filename:  tmpFile.Name(),
+				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: "tmp.file.txt",
 			},
@@ -55,7 +55,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		{
 			name: "client successfully upload file",
 			args: args{req: &storage.UploadRequest{
-				Filename:  tmpFile.Name(),
+				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
 			},
@@ -64,7 +64,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		{
 			name: "client successfully upload file",
 			args: args{req: &storage.UploadRequest{
-				Filename:  tmpFile.Name(),
+				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
 			},
@@ -73,7 +73,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		{
 			name: "client successfully upload file",
 			args: args{req: &storage.UploadRequest{
-				Filename:  tmpFile.Name(),
+				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
 			},

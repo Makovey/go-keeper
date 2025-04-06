@@ -43,7 +43,7 @@ func TestServer_UploadFile(t *testing.T) {
 				jwtToken: uuid.NewString(),
 				chunks: []*storage.UploadRequest{
 					{
-						Filename:  "testable.txt",
+						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
 					},
 					{
@@ -58,7 +58,7 @@ func TestServer_UploadFile(t *testing.T) {
 				jwtToken: "testToken",
 				chunks: []*storage.UploadRequest{
 					{
-						Filename:  "testable.txt",
+						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
 					},
 					{
@@ -81,7 +81,7 @@ func TestServer_UploadFile(t *testing.T) {
 				jwtToken: uuid.NewString(),
 				chunks: []*storage.UploadRequest{
 					{
-						Filename:  "testable.txt",
+						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
 					},
 					{

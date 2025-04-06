@@ -16,6 +16,7 @@ const (
 	startedList step = iota
 	signUp
 	signIn
+	mainMenu
 	upload
 )
 
@@ -34,6 +35,10 @@ type signInPage struct {
 	password textinput.Model
 }
 
+type mainMenuPage struct {
+	list list.Model
+}
+
 type uploadPage struct {
 	picker       filepicker.Model
 	selectedFile string
@@ -44,6 +49,7 @@ type Model struct {
 	startedPage   starterPage
 	signUpPage    signUpPage
 	signInPage    signInPage
+	mainMenuPage  mainMenuPage
 	uploadPage    uploadPage
 	auth          *grpc.AuthClient
 	storage       *grpc.StorageClient
@@ -55,19 +61,34 @@ func InitialModel(
 	auth *grpc.AuthClient,
 	storage *grpc.StorageClient,
 ) *Model {
-	l := mainList()
+	starterList := mainList(
+		"Welcome to auth, choose option:",
+		[]list.Item{
+			item("Sign Up"),
+			item("Sign In"),
+		},
+	)
 	name := nameInput()
 	email := emailInput()
 	password := passwordInput()
+	mainMenuList := mainList(
+		"What need to do?",
+		[]list.Item{
+			item("Upload file"),
+			item("Download file"),
+			item("Delete file"),
+		},
+	)
 
 	return &Model{
-		step:        startedList,
-		startedPage: starterPage{l},
-		signUpPage:  signUpPage{name: name, email: email, password: password},
-		signInPage:  signInPage{email: email, password: password},
-		uploadPage:  uploadPage{picker: filePicker()},
-		auth:        auth,
-		storage:     storage,
+		step:         startedList,
+		startedPage:  starterPage{starterList},
+		signUpPage:   signUpPage{name: name, email: email, password: password},
+		signInPage:   signInPage{email: email, password: password},
+		mainMenuPage: mainMenuPage{list: mainMenuList},
+		uploadPage:   uploadPage{picker: filePicker()},
+		auth:         auth,
+		storage:      storage,
 	}
 }
 

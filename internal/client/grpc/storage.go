@@ -11,6 +11,11 @@ import (
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
+	"github.com/Makovey/go-keeper/internal/utils"
+)
+
+const (
+	rootDir = "go-keeper"
 )
 
 type StorageClient struct {
@@ -47,7 +52,7 @@ func (s *StorageClient) UploadFile(
 	}
 
 	if err = stream.Send(&storage.UploadRequest{
-		Filename: filepath.Base(path),
+		FileName: filepath.Base(path),
 	}); err != nil {
 		return fmt.Errorf("[%s]: failed to send request: %v", fn, err)
 	}
@@ -72,6 +77,46 @@ func (s *StorageClient) UploadFile(
 	_, err = stream.CloseAndRecv()
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to close stream: %v", fn, err)
+	}
+
+	return nil
+}
+
+func (s *StorageClient) DownloadFile(
+	ctx context.Context,
+	fileID string,
+) error {
+	fn := "grpc.DownloadFile"
+
+	req := &storage.DownloadRequest{FileId: fileID}
+	stream, err := s.client.DownloadFile(ctx, req)
+	if err != nil {
+		return fmt.Errorf("[%s]: failed to init download: %v", fn, err)
+	}
+
+	if err = utils.CreateDirIfNeeded(rootDir, fileID); err != nil {
+		return fmt.Errorf("[%s]: %v", fn, err)
+	}
+
+	fullPath := fmt.Sprintf("./%s/%s", rootDir, fileID)
+	file, err := os.Create(fullPath)
+	if err != nil {
+		return fmt.Errorf("[%s]: failed to create file: %v", fn, err)
+	}
+	defer file.Close()
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("[%s]: download failed: %v", fn, err)
+		}
+
+		if _, err := file.Write(res.ChunkData); err != nil {
+			return fmt.Errorf("[%s]: failed to write chunk: %v", fn, err)
+		}
 	}
 
 	return nil

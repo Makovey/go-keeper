@@ -25,11 +25,10 @@ func main() {
 	}
 	manager := jwt.NewManager(cfg)
 
-	aService := authService.NewAuthService(repo, manager, log)
+	aService := authService.NewAuthService(repo, manager)
 	sService := storageService.NewStorageService(
 		repo,
 		file_storager.NewDiskStorager(log),
-		log,
 	)
 
 	authServer := auth.NewAuthServer(log, aService)
