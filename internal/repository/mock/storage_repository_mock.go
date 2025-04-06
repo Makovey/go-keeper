@@ -37,18 +37,18 @@ func (m *MockFileStorager) EXPECT() *MockFileStoragerMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockFileStorager) Get(path string, size int) (*bufio.Reader, error) {
+func (m *MockFileStorager) Get(path string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", path, size)
-	ret0, _ := ret[0].(*bufio.Reader)
+	ret := m.ctrl.Call(m, "Get", path)
+	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockFileStoragerMockRecorder) Get(path, size interface{}) *gomock.Call {
+func (mr *MockFileStoragerMockRecorder) Get(path interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockFileStorager)(nil).Get), path, size)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockFileStorager)(nil).Get), path)
 }
 
 // Save mocks base method.

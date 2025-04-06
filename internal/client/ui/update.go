@@ -129,6 +129,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					m.clientMessage = errors.New("file uploaded successfully")
 				}
+			case download:
+				if len(m.downloadPage.usersFiles) != 0 {
+					fileId := m.downloadPage.contentTable.SelectedRow()[0]
+					err := m.storage.DownloadFile(m.setTokenToCtx(context.TODO()), fileId)
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.clientMessage = errors.New("file downloaded successfully")
+				}
 			}
 		case tab:
 			switch m.step {

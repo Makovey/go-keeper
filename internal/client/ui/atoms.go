@@ -72,7 +72,7 @@ func tableContent() table.Model {
 		{Title: "ID", Width: 40},
 		{Title: "Name", Width: 20},
 		{Title: "Size", Width: 8},
-		{Title: "Created At", Width: 18},
+		{Title: "Created At (UTC 0)", Width: 18},
 	}
 
 	t := table.New(

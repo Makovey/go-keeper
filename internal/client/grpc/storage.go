@@ -17,6 +17,7 @@ import (
 
 const (
 	rootDir = "go-keeper"
+	dirName = "files"
 )
 
 type StorageClient struct {
@@ -108,16 +109,29 @@ func (s *StorageClient) DownloadFile(
 		return fmt.Errorf("[%s]: failed to init download: %v", fn, err)
 	}
 
-	if err = utils.CreateDirIfNeeded(rootDir, fileID); err != nil {
+	firstChunk, err := stream.Recv()
+	if err != nil {
+		return fmt.Errorf("[%s]: failed to get filename: %v", fn, err)
+	}
+
+	if firstChunk.GetFileName() == "" {
+		return fmt.Errorf("[%s]: empty filename received", fn)
+	}
+
+	if err = utils.CreateDirIfNeeded(rootDir, dirName); err != nil {
 		return fmt.Errorf("[%s]: %v", fn, err)
 	}
 
-	fullPath := fmt.Sprintf("./%s/%s", rootDir, fileID)
+	fullPath := fmt.Sprintf("./%s/%s/%s", rootDir, dirName, firstChunk.GetFileName())
 	file, err := os.Create(fullPath)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to create file: %v", fn, err)
 	}
 	defer file.Close()
+
+	if _, err := file.Write(firstChunk.ChunkData); err != nil {
+		return fmt.Errorf("[%s]: failed to write first chunk: %v", fn, err)
+	}
 
 	for {
 		res, err := stream.Recv()

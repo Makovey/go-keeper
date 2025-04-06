@@ -55,18 +55,17 @@ func (d *diskStorager) Save(path, fileName string, data *bufio.Reader) error {
 	return nil
 }
 
-func (d *diskStorager) Get(path string, size int) (*bufio.Reader, error) {
+func (d *diskStorager) Get(path string) ([]byte, error) {
 	fn := "file_storager.Get"
 
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
 	fullPath := fmt.Sprintf("./%s/%s", rootDirForStorage, path)
-	file, err := os.Open(fullPath)
+	data, err := os.ReadFile(fullPath)
 	if err != nil {
-		return nil, fmt.Errorf("[%s]: can't open file: %v", fn, err)
+		return nil, fmt.Errorf("[%s]: can't read file: %v", fn, err)
 	}
-	defer file.Close()
 
-	return bufio.NewReaderSize(file, size), nil
+	return data, nil
 }

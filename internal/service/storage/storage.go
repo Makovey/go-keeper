@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 
@@ -16,7 +17,7 @@ import (
 
 type FileStorager interface {
 	Save(path, fileName string, data *bufio.Reader) error
-	Get(path string, size int) (*bufio.Reader, error)
+	Get(path string) ([]byte, error)
 }
 
 // RepositoryStorage NOTE: префикс Storage, чтобы не было коллизии имен при генерации моков
@@ -74,12 +75,12 @@ func (s *service) DownloadFile(ctx context.Context, userID, fileID string) (*mod
 		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
 	}
 
-	reader, err := s.storager.Get(file.Path, file.FileSize)
+	data, err := s.storager.Get(file.Path)
 	if err != nil {
 		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
 	}
 
-	return &model.File{Data: *reader, FileName: file.FileName, FileSize: file.FileSize}, nil
+	return &model.File{Data: *bufio.NewReader(bytes.NewReader(data)), FileName: file.FileName, FileSize: file.FileSize}, nil
 }
 
 func (s *service) GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error) {
