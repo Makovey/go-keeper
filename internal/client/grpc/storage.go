@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/dustin/go-humanize"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
@@ -80,6 +81,19 @@ func (s *StorageClient) UploadFile(
 	}
 
 	return nil
+}
+
+func (s *StorageClient) GetUsersFiles(
+	ctx context.Context,
+) ([]*storage.UsersFile, error) {
+	fn := "grpc.GetUserFiles"
+
+	resp, err := s.client.GetUsersFile(ctx, &emptypb.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: failed to get users files: %v", fn, err)
+	}
+
+	return resp.GetFiles(), nil
 }
 
 func (s *StorageClient) DownloadFile(

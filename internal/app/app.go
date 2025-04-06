@@ -77,6 +77,7 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 		grpc.Creds(insecure.NewCredentials()),
 		grpc.ChainUnaryInterceptor(
 			unary.Logger(a.log),
+			unary.JWTAuth(a.log, jwt.NewManager(a.cfg)),
 		),
 		grpc.ChainStreamInterceptor(
 			stream.Logger(a.log),

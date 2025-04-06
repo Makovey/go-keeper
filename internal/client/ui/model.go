@@ -3,10 +3,12 @@ package ui
 import (
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/Makovey/go-keeper/internal/client/grpc"
+	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
@@ -17,6 +19,7 @@ const (
 	signUp
 	signIn
 	mainMenu
+	download
 	upload
 )
 
@@ -39,6 +42,11 @@ type mainMenuPage struct {
 	list list.Model
 }
 
+type downloadPage struct {
+	contentTable table.Model
+	usersFiles   []*storage.UsersFile
+}
+
 type uploadPage struct {
 	picker       filepicker.Model
 	selectedFile string
@@ -50,6 +58,7 @@ type Model struct {
 	signUpPage    signUpPage
 	signInPage    signInPage
 	mainMenuPage  mainMenuPage
+	downloadPage  downloadPage
 	uploadPage    uploadPage
 	auth          *grpc.AuthClient
 	storage       *grpc.StorageClient
@@ -86,6 +95,7 @@ func InitialModel(
 		signUpPage:   signUpPage{name: name, email: email, password: password},
 		signInPage:   signInPage{email: email, password: password},
 		mainMenuPage: mainMenuPage{list: mainMenuList},
+		downloadPage: downloadPage{contentTable: tableContent()},
 		uploadPage:   uploadPage{picker: filePicker()},
 		auth:         auth,
 		storage:      storage,

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -63,6 +64,20 @@ func (m *Model) View() string {
 		b.WriteString(m.signInPage.password.View() + "\n")
 	case mainMenu:
 		b.WriteString(m.mainMenuPage.list.View())
+	case download:
+		rows := make([]table.Row, 0, len(m.downloadPage.usersFiles))
+
+		for _, file := range m.downloadPage.usersFiles {
+			rows = append(rows, table.Row{
+				file.FileId,
+				file.FileName,
+				file.FileSize,
+				file.CreatedAt.AsTime().Format("2006-01-02 15:04"),
+			})
+		}
+
+		m.downloadPage.contentTable.SetRows(rows)
+		b.WriteString(m.downloadPage.contentTable.View())
 	case upload:
 		if m.uploadPage.selectedFile == "" {
 			b.WriteString("Pick a file: \n")

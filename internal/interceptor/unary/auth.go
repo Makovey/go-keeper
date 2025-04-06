@@ -1,4 +1,4 @@
-package stream
+package unary
 
 import (
 	"context"
@@ -22,28 +22,28 @@ const (
 )
 
 var exceptMethods = []string{
-	"ServerReflectionInfo", // reflection debug mode
+	"RegisterUser",
+	"LoginUser",
 }
 
 func JWTAuth(
 	log logger.Logger,
 	jwtUtils *jwt.Manager,
-) grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		fn := "interceptor.Auth"
 
 		method := strings.Split(info.FullMethod, "/")[len(strings.Split(info.FullMethod, "/"))-1]
 		if slices.Contains(exceptMethods, method) {
-			return handler(srv, ss)
+			return handler(ctx, req)
 		}
 
 		var token string
 		var userID string
-		var err error
 
-		md, ok := metadata.FromIncomingContext(ss.Context())
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return status.Error(codes.Unauthenticated, "metadata is not provided")
+			return nil, status.Error(codes.Unauthenticated, "metadata is not provided")
 		}
 
 		values := md.Get(jwtMetaName)
@@ -54,35 +54,20 @@ func JWTAuth(
 		if len(token) != 0 {
 			userID, err = jwtUtils.ParseUserID(token)
 			if err != nil && errors.Is(err, jwt.ErrParseToken) {
-				return status.Error(codes.Internal, helper.InternalServerError)
+				return nil, status.Error(codes.Internal, helper.InternalServerError)
 			}
 
 			if userID == "" {
 				log.Warn(fmt.Sprintf("[%s]: userID is empty", fn))
-				return status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
+				return nil, status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
 			}
 		}
 
 		if len(token) == 0 || errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrInvalidToken) {
-			return status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
+			return nil, status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
 		}
 
-		ctx := context.WithValue(ss.Context(), jwt.CtxUserIDKey, userID)
-
-		wrappedStream := &wrappedServerStream{
-			ServerStream: ss,
-			ctx:          ctx,
-		}
-
-		return handler(srv, wrappedStream)
+		ctx = context.WithValue(ctx, jwt.CtxUserIDKey, userID)
+		return handler(ctx, req)
 	}
-}
-
-type wrappedServerStream struct {
-	grpc.ServerStream
-	ctx context.Context
-}
-
-func (w *wrappedServerStream) Context() context.Context {
-	return w.ctx
 }

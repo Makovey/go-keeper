@@ -42,6 +42,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case signIn:
 				m.step = startedList
 				return m, nil
+			case download:
+				m.step = mainMenu
+				return m, nil
 			case upload:
 				m.step = mainMenu
 				return m, nil
@@ -104,7 +107,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.step = upload
 					return m, m.uploadPage.picker.Init()
 				case mainMenuSelect2:
-					//m.step = signIn
+					data, err := m.storage.GetUsersFiles(m.setTokenToCtx(context.TODO()))
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.downloadPage.usersFiles = data
+					m.step = download
+					return m, nil
 				case mainMenuSelect3:
 					//m.step = upload
 					//return m, m.uploadPage.picker.Init()
@@ -179,6 +189,8 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 		}
 	case mainMenu:
 		m.mainMenuPage.list, cmd = m.mainMenuPage.list.Update(msg)
+	case download:
+		m.downloadPage.contentTable, cmd = m.downloadPage.contentTable.Update(msg)
 	case upload:
 		m.uploadPage.picker, cmd = m.uploadPage.picker.Update(msg)
 

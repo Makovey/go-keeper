@@ -13,7 +13,7 @@ func ToProtoFromFile(files []*model.ExtendedInfoFile) []*storage.UsersFile {
 	for _, file := range files {
 		res = append(res, &storage.UsersFile{
 			FileId:    file.ID,
-			FileName:  file.ID,
+			FileName:  file.FileName,
 			FileSize:  file.FileSize,
 			CreatedAt: timestamppb.New(file.CreatedAt),
 		})

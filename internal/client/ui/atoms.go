@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -64,6 +65,35 @@ func filePicker() filepicker.Model {
 	p.Height = 10
 
 	return p
+}
+
+func tableContent() table.Model {
+	columns := []table.Column{
+		{Title: "ID", Width: 40},
+		{Title: "Name", Width: 20},
+		{Title: "Size", Width: 8},
+		{Title: "Created At", Width: 18},
+	}
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithFocused(true),
+		table.WithHeight(7),
+	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+	t.SetStyles(s)
+
+	return t
 }
 
 func validate(input string) error {
