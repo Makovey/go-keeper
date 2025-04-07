@@ -9,38 +9,32 @@ import (
 )
 
 type authClientMock struct {
-	registerResponse *auth.AuthResponse
-	registerError    error
-	loginResponse    *auth.AuthResponse
-	loginUserError   error
+	model *auth.AuthResponse
+	error error
 }
 
 func NewAuthClientMock(
-	registerResponse *auth.AuthResponse,
-	registerError error,
-	loginResponse *auth.AuthResponse,
-	loginUserError error,
+	model *auth.AuthResponse,
+	error error,
 ) auth.AuthClient {
 	return &authClientMock{
-		registerResponse: registerResponse,
-		registerError:    registerError,
-		loginResponse:    loginResponse,
-		loginUserError:   loginUserError,
+		model: model,
+		error: error,
 	}
 }
 
 func (a authClientMock) RegisterUser(ctx context.Context, in *auth.User, opts ...grpc.CallOption) (*auth.AuthResponse, error) {
-	if a.registerError != nil {
-		return nil, a.registerError
+	if a.error != nil {
+		return nil, a.error
 	}
 
-	return a.registerResponse, nil
+	return a.model, nil
 }
 
 func (a authClientMock) LoginUser(ctx context.Context, in *auth.LoginRequest, opts ...grpc.CallOption) (*auth.AuthResponse, error) {
-	if a.loginUserError != nil {
-		return nil, a.loginUserError
+	if a.error != nil {
+		return nil, a.error
 	}
 
-	return a.loginResponse, nil
+	return a.model, nil
 }

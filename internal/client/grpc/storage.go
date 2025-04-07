@@ -21,18 +21,21 @@ const (
 )
 
 type StorageClient struct {
-	log    logger.Logger
-	client storage.StorageServiceClient
+	log        logger.Logger
+	dirManager utils.DirManager
+	client     storage.StorageServiceClient
 }
 
 func NewStorageClient(
 	log logger.Logger,
+	dirManager utils.DirManager,
 	client storage.StorageServiceClient,
 ) *StorageClient {
 
 	return &StorageClient{
-		log:    log,
-		client: client,
+		log:        log,
+		dirManager: dirManager,
+		client:     client,
 	}
 }
 
@@ -118,12 +121,12 @@ func (s *StorageClient) DownloadFile(
 		return fmt.Errorf("[%s]: empty filename received", fn)
 	}
 
-	if err = utils.CreateDirIfNeeded(rootDir, dirName); err != nil {
+	if err = s.dirManager.CreateDir(rootDir, dirName); err != nil {
 		return fmt.Errorf("[%s]: %v", fn, err)
 	}
 
 	fullPath := fmt.Sprintf("./%s/%s/%s", rootDir, dirName, firstChunk.GetFileName())
-	file, err := os.Create(fullPath)
+	file, err := s.dirManager.CreateFile(fullPath)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to create file: %v", fn, err)
 	}

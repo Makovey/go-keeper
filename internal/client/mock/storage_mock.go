@@ -10,41 +10,85 @@ import (
 )
 
 type storageClientMock struct {
-	uploadResponse grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse]
-	uploadError    error
+	uploadStream      grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse]
+	downloadStream    grpc.ServerStreamingClient[storage.DownloadResponse]
+	usersFileResponse *storage.GetUsersFileResponse
+	error             error
 }
 
-func NewStorageClientMock(
-	uploadResponse grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse],
-	uploadError error,
+func NewStorageWithUploadStream(
+	stream grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse],
+	error error,
 ) storage.StorageServiceClient {
 	return &storageClientMock{
-		uploadResponse: uploadResponse,
-		uploadError:    uploadError,
+		uploadStream: stream,
+		error:        error,
 	}
 }
 
-func (s storageClientMock) UploadFile(
-	ctx context.Context, opts ...grpc.CallOption,
+func NewStorageWithDownloadStream(
+	stream grpc.ServerStreamingClient[storage.DownloadResponse],
+	error error,
+) storage.StorageServiceClient {
+	return &storageClientMock{
+		downloadStream: stream,
+		error:          error,
+	}
+}
+
+func NewStorageWitUsersFile(
+	usersFileResponse *storage.GetUsersFileResponse,
+	error error,
+) storage.StorageServiceClient {
+	return &storageClientMock{
+		usersFileResponse: usersFileResponse,
+		error:             error,
+	}
+}
+
+func NewStorageWitEmptyMock(
+	error error,
+) storage.StorageServiceClient {
+	return &storageClientMock{
+		error: error,
+	}
+}
+
+func (s *storageClientMock) UploadFile(
+	ctx context.Context,
+	opts ...grpc.CallOption,
 ) (grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse], error) {
-	if s.uploadError != nil {
-		return nil, s.uploadError
+	if s.error != nil {
+		return nil, s.error
 	}
 
-	return s.uploadResponse, nil
+	return s.uploadStream, nil
 }
 
-func (s storageClientMock) DownloadFile(ctx context.Context, in *storage.DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[storage.DownloadResponse], error) {
-	//TODO implement me
-	panic("implement me")
+func (s *storageClientMock) GetUsersFile(
+	ctx context.Context,
+	in *emptypb.Empty,
+	opts ...grpc.CallOption,
+) (*storage.GetUsersFileResponse, error) {
+	if s.error != nil {
+		return nil, s.error
+	}
+
+	return s.usersFileResponse, nil
 }
 
-func (s storageClientMock) GetUsersFile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*storage.GetUsersFileResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *storageClientMock) DownloadFile(ctx context.Context, in *storage.DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[storage.DownloadResponse], error) {
+	if s.error != nil {
+		return nil, s.error
+	}
+
+	return s.downloadStream, nil
 }
 
-func (s storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	if s.error != nil {
+		return nil, s.error
+	}
+
+	return &emptypb.Empty{}, nil
 }

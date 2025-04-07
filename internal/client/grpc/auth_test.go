@@ -19,8 +19,8 @@ func TestAuthClient_Login(t *testing.T) {
 	}
 
 	type expects struct {
-		clientErr error
 		clientAns *auth.AuthResponse
+		clientErr error
 		wantErr   bool
 	}
 
@@ -43,8 +43,6 @@ func TestAuthClient_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := mock.NewAuthClientMock(
-				tt.expects.clientAns,
-				tt.expects.clientErr,
 				tt.expects.clientAns,
 				tt.expects.clientErr,
 			)
@@ -92,8 +90,6 @@ func TestAuthClient_Register(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := mock.NewAuthClientMock(
-				tt.expects.clientAns,
-				tt.expects.clientErr,
 				tt.expects.clientAns,
 				tt.expects.clientErr,
 			)

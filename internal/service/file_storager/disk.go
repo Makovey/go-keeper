@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"sync"
 
 	"github.com/Makovey/go-keeper/internal/logger"
@@ -15,16 +14,19 @@ import (
 const rootDirForStorage = "fileStorage"
 
 type diskStorager struct {
-	log logger.Logger
-	mu  sync.RWMutex
+	log        logger.Logger
+	dirManager utils.DirManager
+	mu         sync.RWMutex
 }
 
 func NewDiskStorager(
 	log logger.Logger,
+	dirManager utils.DirManager,
 ) storage.FileStorager {
 	return &diskStorager{
-		log: log,
-		mu:  sync.RWMutex{},
+		log:        log,
+		dirManager: dirManager,
+		mu:         sync.RWMutex{},
 	}
 }
 
@@ -33,12 +35,12 @@ func (d *diskStorager) Save(path, fileName string, data *bufio.Reader) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err := utils.CreateDirIfNeeded(rootDirForStorage, path); err != nil {
+	if err := d.dirManager.CreateDir(rootDirForStorage, path); err != nil {
 		return fmt.Errorf("[%s]: %v", fn, err)
 	}
 
 	fullPath := fmt.Sprintf("./%s/%s/%s", rootDirForStorage, path, fileName)
-	file, err := os.Create(fullPath)
+	file, err := d.dirManager.CreateFile(fullPath)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to create file: %v", fn, err)
 	}
@@ -62,7 +64,7 @@ func (d *diskStorager) Get(path string) ([]byte, error) {
 	defer d.mu.RUnlock()
 
 	fullPath := fmt.Sprintf("./%s/%s", rootDirForStorage, path)
-	data, err := os.ReadFile(fullPath)
+	data, err := d.dirManager.ReadFile(fullPath)
 	if err != nil {
 		return nil, fmt.Errorf("[%s]: can't read file: %v", fn, err)
 	}
@@ -76,7 +78,7 @@ func (d *diskStorager) Delete(path string) error {
 	defer d.mu.Unlock()
 
 	fullPath := fmt.Sprintf("./%s/%s", rootDirForStorage, path)
-	if err := os.Remove(fullPath); err != nil {
+	if err := d.dirManager.RemoveFile(fullPath); err != nil {
 		return fmt.Errorf("[%s]: can't delete file: %v", fn, err)
 	}
 

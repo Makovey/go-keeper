@@ -13,6 +13,7 @@ import (
 	storageService "github.com/Makovey/go-keeper/internal/service/storage"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
+	"github.com/Makovey/go-keeper/internal/utils"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	aService := authService.NewAuthService(repo, manager)
 	sService := storageService.NewStorageService(
 		repo,
-		file_storager.NewDiskStorager(log),
+		file_storager.NewDiskStorager(log, utils.NewDirManager()),
 	)
 
 	authServer := auth.NewAuthServer(log, aService)
