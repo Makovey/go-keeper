@@ -20,6 +20,7 @@ const (
 	signIn
 	mainMenu
 	download
+	deleted
 	upload
 )
 
@@ -47,6 +48,11 @@ type downloadPage struct {
 	usersFiles   []*storage.UsersFile
 }
 
+type deletePage struct {
+	contentTable table.Model
+	usersFiles   []*storage.UsersFile
+}
+
 type uploadPage struct {
 	picker       filepicker.Model
 	selectedFile string
@@ -59,6 +65,7 @@ type Model struct {
 	signInPage    signInPage
 	mainMenuPage  mainMenuPage
 	downloadPage  downloadPage
+	deletePage    deletePage
 	uploadPage    uploadPage
 	auth          *grpc.AuthClient
 	storage       *grpc.StorageClient
@@ -88,6 +95,7 @@ func InitialModel(
 			item("Delete file"),
 		},
 	)
+	tableContent := tableContent()
 
 	return &Model{
 		step:         startedList,
@@ -95,7 +103,8 @@ func InitialModel(
 		signUpPage:   signUpPage{name: name, email: email, password: password},
 		signInPage:   signInPage{email: email, password: password},
 		mainMenuPage: mainMenuPage{list: mainMenuList},
-		downloadPage: downloadPage{contentTable: tableContent()},
+		downloadPage: downloadPage{contentTable: tableContent},
+		deletePage:   deletePage{contentTable: tableContent},
 		uploadPage:   uploadPage{picker: filePicker()},
 		auth:         auth,
 		storage:      storage,

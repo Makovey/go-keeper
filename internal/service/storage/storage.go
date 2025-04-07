@@ -18,15 +18,17 @@ import (
 type FileStorager interface {
 	Save(path, fileName string, data *bufio.Reader) error
 	Get(path string) ([]byte, error)
+	Delete(path string) error
 }
 
-// RepositoryStorage NOTE: префикс Storage, чтобы не было коллизии имен при генерации моков
+// RepositoryStorage NOTE: суффикс Storage, чтобы не было коллизии имен при генерации моков
 //
 //go:generate mockgen -source=storage.go -destination=../../repository/mock/storage_repository_mock.go -package=mock
 type RepositoryStorage interface {
 	SaveFileMetadata(ctx context.Context, fileData *entity.File) error
 	GetFileMetadata(ctx context.Context, userID, fileID string) (*entity.File, error)
 	GetUsersFiles(ctx context.Context, userID string) ([]*entity.File, error)
+	DeleteUsersFile(ctx context.Context, userID, fileID string) error
 }
 
 type service struct {
@@ -102,6 +104,20 @@ func (s *service) GetUsersFiles(ctx context.Context, userID string) ([]*model.Ex
 	}
 
 	return res, nil
+}
+
+func (s *service) DeleteUsersFile(ctx context.Context, userID, fileID, fileName string) error {
+	fn := "storage.DeleteUsersFile"
+
+	if err := s.repo.DeleteUsersFile(ctx, userID, fileID); err != nil {
+		return fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	if err := s.storager.Delete(fmt.Sprintf("%s/%s", userID, fileName)); err != nil {
+		return fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return nil
 }
 
 func formatFileSize(bytes int) string {

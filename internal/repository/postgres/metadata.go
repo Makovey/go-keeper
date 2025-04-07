@@ -91,3 +91,23 @@ func (r *Repo) GetUsersFiles(ctx context.Context, userID string) ([]*entity.File
 
 	return files, nil
 }
+
+func (r *Repo) DeleteUsersFile(ctx context.Context, userID, fileID string) error {
+	fn := "postgres.DeleteUsersFile"
+
+	res, err := r.db.Exec(
+		ctx,
+		`DELETE FROM files_metadata WHERE owner_user_id = $1 AND id = $2`,
+		userID,
+		fileID,
+	)
+	if err != nil {
+		return fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("[%s]: %w", fn, serviceErrors.ErrFileNotFound)
+	}
+
+	return nil
+}

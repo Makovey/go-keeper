@@ -5,6 +5,7 @@ import (
 	"errors"
 	"unicode/utf8"
 
+	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/grpc/metadata"
@@ -43,6 +44,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.step = startedList
 				return m, nil
 			case download:
+				m.step = mainMenu
+				return m, nil
+			case deleted:
 				m.step = mainMenu
 				return m, nil
 			case upload:
@@ -116,8 +120,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.step = download
 					return m, nil
 				case mainMenuSelect3:
-					//m.step = upload
-					//return m, m.uploadPage.picker.Init()
+					data, err := m.storage.GetUsersFiles(m.setTokenToCtx(context.TODO()))
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.deletePage.usersFiles = data
+					m.step = deleted
+					return m, nil
 				}
 				return m, nil
 			case upload:
@@ -138,6 +148,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return m, nil
 					}
 					m.clientMessage = errors.New("file downloaded successfully")
+				}
+			case deleted:
+				if len(m.deletePage.usersFiles) != 0 {
+					fileID := m.deletePage.contentTable.SelectedRow()[0]
+					fileName := m.deletePage.contentTable.SelectedRow()[1]
+					err := m.storage.DeleteFile(m.setTokenToCtx(context.TODO()), fileID, fileName)
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.removeRowFromDeletePage()
+					m.clientMessage = errors.New("file deleted successfully")
 				}
 			}
 		case tab:
@@ -201,6 +223,8 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 		m.mainMenuPage.list, cmd = m.mainMenuPage.list.Update(msg)
 	case download:
 		m.downloadPage.contentTable, cmd = m.downloadPage.contentTable.Update(msg)
+	case deleted:
+		m.deletePage.contentTable, cmd = m.deletePage.contentTable.Update(msg)
 	case upload:
 		m.uploadPage.picker, cmd = m.uploadPage.picker.Update(msg)
 
@@ -234,6 +258,30 @@ func (m *Model) isPageValid() bool {
 	default:
 		return true
 	}
+}
+
+func (m *Model) removeRowFromDeletePage() {
+	fileID := m.deletePage.contentTable.SelectedRow()[0]
+	fileName := m.deletePage.contentTable.SelectedRow()[1]
+
+	for i, file := range m.deletePage.usersFiles {
+		if file.FileId == fileID && file.FileName == fileName {
+			m.deletePage.usersFiles = append(m.deletePage.usersFiles[:i], m.deletePage.usersFiles[i+1:]...)
+			break
+		}
+	}
+
+	rows := make([]table.Row, 0, len(m.deletePage.usersFiles))
+	for _, file := range m.deletePage.usersFiles {
+		rows = append(rows, []string{
+			file.FileId,
+			file.FileName,
+			file.FileSize,
+			file.CreatedAt.AsTime().Format("2006-01-02 15:04"),
+		})
+	}
+
+	m.deletePage.contentTable.SetRows(rows)
 }
 
 func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {

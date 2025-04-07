@@ -149,3 +149,19 @@ func (s *StorageClient) DownloadFile(
 
 	return nil
 }
+
+func (s *StorageClient) DeleteFile(
+	ctx context.Context,
+	fileID string,
+	fileName string,
+) error {
+	fn := "grpc.DeleteFile"
+
+	req := &storage.DeleteUsersFileRequest{FileName: fileName, FileId: fileID}
+	_, err := s.client.DeleteUsersFile(ctx, req)
+	if err != nil {
+		return fmt.Errorf("[%s]: failed to delete file: %v", fn, err)
+	}
+
+	return nil
+}

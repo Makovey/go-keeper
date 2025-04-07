@@ -20,9 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	StorageService_UploadFile_FullMethodName   = "/storage.StorageService/UploadFile"
-	StorageService_DownloadFile_FullMethodName = "/storage.StorageService/DownloadFile"
-	StorageService_GetUsersFile_FullMethodName = "/storage.StorageService/GetUsersFile"
+	StorageService_UploadFile_FullMethodName      = "/storage.StorageService/UploadFile"
+	StorageService_DownloadFile_FullMethodName    = "/storage.StorageService/DownloadFile"
+	StorageService_GetUsersFile_FullMethodName    = "/storage.StorageService/GetUsersFile"
+	StorageService_DeleteUsersFile_FullMethodName = "/storage.StorageService/DeleteUsersFile"
 )
 
 // StorageServiceClient is the client API for StorageService service.
@@ -32,6 +33,7 @@ type StorageServiceClient interface {
 	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UploadRequest, UploadResponse], error)
 	DownloadFile(ctx context.Context, in *DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DownloadResponse], error)
 	GetUsersFile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetUsersFileResponse, error)
+	DeleteUsersFile(ctx context.Context, in *DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type storageServiceClient struct {
@@ -84,6 +86,16 @@ func (c *storageServiceClient) GetUsersFile(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
+func (c *storageServiceClient) DeleteUsersFile(ctx context.Context, in *DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, StorageService_DeleteUsersFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StorageServiceServer is the server API for StorageService service.
 // All implementations must embed UnimplementedStorageServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type StorageServiceServer interface {
 	UploadFile(grpc.ClientStreamingServer[UploadRequest, UploadResponse]) error
 	DownloadFile(*DownloadRequest, grpc.ServerStreamingServer[DownloadResponse]) error
 	GetUsersFile(context.Context, *emptypb.Empty) (*GetUsersFileResponse, error)
+	DeleteUsersFile(context.Context, *DeleteUsersFileRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedStorageServiceServer()
 }
 
@@ -109,6 +122,9 @@ func (UnimplementedStorageServiceServer) DownloadFile(*DownloadRequest, grpc.Ser
 }
 func (UnimplementedStorageServiceServer) GetUsersFile(context.Context, *emptypb.Empty) (*GetUsersFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsersFile not implemented")
+}
+func (UnimplementedStorageServiceServer) DeleteUsersFile(context.Context, *DeleteUsersFileRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUsersFile not implemented")
 }
 func (UnimplementedStorageServiceServer) mustEmbedUnimplementedStorageServiceServer() {}
 func (UnimplementedStorageServiceServer) testEmbeddedByValue()                        {}
@@ -167,6 +183,24 @@ func _StorageService_GetUsersFile_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StorageService_DeleteUsersFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUsersFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServiceServer).DeleteUsersFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StorageService_DeleteUsersFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServiceServer).DeleteUsersFile(ctx, req.(*DeleteUsersFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StorageService_ServiceDesc is the grpc.ServiceDesc for StorageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -177,6 +211,10 @@ var StorageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUsersFile",
 			Handler:    _StorageService_GetUsersFile_Handler,
+		},
+		{
+			MethodName: "DeleteUsersFile",
+			Handler:    _StorageService_DeleteUsersFile_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

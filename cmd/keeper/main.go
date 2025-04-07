@@ -19,7 +19,7 @@ func main() {
 	log := slog.NewLogger()
 	cfg := config.NewConfig(log)
 
-	repo, err := postgres.NewPostgresRepo(cfg, log)
+	repo, err := postgres.NewPostgresRepo(cfg)
 	if err != nil {
 		syslog.Fatalf("[%s]: %s", "main", err.Error())
 	}

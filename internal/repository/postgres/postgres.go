@@ -8,15 +8,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/Makovey/go-keeper/internal/config"
-	"github.com/Makovey/go-keeper/internal/logger"
 )
 
 type Repo struct {
-	log logger.Logger
-	db  *pgxpool.Pool
+	db *pgxpool.Pool
 }
 
-func NewPostgresRepo(cfg config.Config, log logger.Logger) (*Repo, error) {
+func NewPostgresRepo(cfg config.Config) (*Repo, error) {
 	fn := "postgres.NewPostgresRepo"
 
 	pool, err := pgxpool.New(context.Background(), cfg.DatabaseDSN())
@@ -25,8 +23,7 @@ func NewPostgresRepo(cfg config.Config, log logger.Logger) (*Repo, error) {
 	}
 
 	return &Repo{
-		log: log,
-		db:  pool,
+		db: pool,
 	}, nil
 }
 

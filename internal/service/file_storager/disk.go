@@ -69,3 +69,16 @@ func (d *diskStorager) Get(path string) ([]byte, error) {
 
 	return data, nil
 }
+
+func (d *diskStorager) Delete(path string) error {
+	fn := "file_storager.Delete"
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	fullPath := fmt.Sprintf("./%s/%s", rootDirForStorage, path)
+	if err := os.Remove(fullPath); err != nil {
+		return fmt.Errorf("[%s]: can't delete file: %v", fn, err)
+	}
+
+	return nil
+}
