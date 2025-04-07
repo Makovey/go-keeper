@@ -21,8 +21,8 @@ import (
 
 func TestServer_UploadFile(t *testing.T) {
 	type args struct {
-		jwtToken string
-		chunks   []*storage.UploadRequest
+		userID string
+		chunks []*storage.UploadRequest
 	}
 
 	type expects struct {
@@ -40,7 +40,7 @@ func TestServer_UploadFile(t *testing.T) {
 		{
 			name: "successfully upload file",
 			args: args{
-				jwtToken: uuid.NewString(),
+				userID: uuid.NewString(),
 				chunks: []*storage.UploadRequest{
 					{
 						FileName:  "testable.txt",
@@ -55,7 +55,7 @@ func TestServer_UploadFile(t *testing.T) {
 		{
 			name: "failed to upload file: invalid jwtToken",
 			args: args{
-				jwtToken: "testToken",
+				userID: "testToken",
 				chunks: []*storage.UploadRequest{
 					{
 						FileName:  "testable.txt",
@@ -70,15 +70,15 @@ func TestServer_UploadFile(t *testing.T) {
 		{
 			name: "failed to upload file: invalid request",
 			args: args{
-				jwtToken: uuid.NewString(),
-				chunks:   []*storage.UploadRequest{},
+				userID: uuid.NewString(),
+				chunks: []*storage.UploadRequest{},
 			},
 			expects: expects{servAns: uuid.NewString(), result: codes.InvalidArgument, wantErr: true},
 		},
 		{
 			name: "failed to upload file: service error",
 			args: args{
-				jwtToken: uuid.NewString(),
+				userID: uuid.NewString(),
 				chunks: []*storage.UploadRequest{
 					{
 						FileName:  "testable.txt",
@@ -100,7 +100,7 @@ func TestServer_UploadFile(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			ctx := context.WithValue(context.Background(), jwt.CtxUserIDKey, tt.args.jwtToken)
+			ctx := context.WithValue(context.Background(), jwt.CtxUserIDKey, tt.args.userID)
 			m := mock.NewMockServiceStorage(ctrl)
 			m.EXPECT().UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.expects.servAns, tt.expects.servErr).AnyTimes()
 
@@ -109,7 +109,7 @@ func TestServer_UploadFile(t *testing.T) {
 				service: m,
 			}
 
-			stream := &grpcMock.ClientStreamMock{
+			stream := &grpcMock.ClientStreamMock[storage.UploadRequest, storage.UploadResponse]{
 				RecvFunc: func() func() (*storage.UploadRequest, error) {
 					count := 0
 					return func() (*storage.UploadRequest, error) {

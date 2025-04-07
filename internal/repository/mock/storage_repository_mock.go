@@ -36,6 +36,20 @@ func (m *MockFileStorager) EXPECT() *MockFileStoragerMockRecorder {
 	return m.recorder
 }
 
+// Delete mocks base method.
+func (m *MockFileStorager) Delete(path string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", path)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockFileStoragerMockRecorder) Delete(path interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockFileStorager)(nil).Delete), path)
+}
+
 // Get mocks base method.
 func (m *MockFileStorager) Get(path string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -86,6 +100,20 @@ func NewMockRepositoryStorage(ctrl *gomock.Controller) *MockRepositoryStorage {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepositoryStorage) EXPECT() *MockRepositoryStorageMockRecorder {
 	return m.recorder
+}
+
+// DeleteUsersFile mocks base method.
+func (m *MockRepositoryStorage) DeleteUsersFile(ctx context.Context, userID, fileID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUsersFile", ctx, userID, fileID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUsersFile indicates an expected call of DeleteUsersFile.
+func (mr *MockRepositoryStorageMockRecorder) DeleteUsersFile(ctx, userID, fileID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUsersFile", reflect.TypeOf((*MockRepositoryStorage)(nil).DeleteUsersFile), ctx, userID, fileID)
 }
 
 // GetFileMetadata mocks base method.

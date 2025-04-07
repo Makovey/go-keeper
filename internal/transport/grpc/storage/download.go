@@ -25,12 +25,12 @@ func (s *Server) DownloadFile(
 
 	file, err := s.service.DownloadFile(stream.Context(), userID, req.GetFileId())
 	if err != nil {
-		return status.Error(codes.InvalidArgument, helper.InternalServerError)
+		return status.Error(codes.InvalidArgument, helper.InvalidArgument)
 	}
 
 	if err = stream.Send(&storage.DownloadResponse{
 		FileName: file.FileName,
-	}); err != nil {
+	}); err != nil || file.FileName == "" {
 		s.log.Errorf("[%s]: %v", fn, err)
 		return status.Errorf(codes.Internal, "failed to send file name: %v", err)
 	}

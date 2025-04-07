@@ -43,3 +43,8 @@ func (s storageClientMock) GetUsersFile(ctx context.Context, in *emptypb.Empty, 
 	//TODO implement me
 	panic("implement me")
 }
+
+func (s storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	//TODO implement me
+	panic("implement me")
+}
