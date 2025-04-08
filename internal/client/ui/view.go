@@ -10,6 +10,8 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 var (
@@ -65,32 +67,10 @@ func (m *Model) View() string {
 	case mainMenu:
 		b.WriteString(m.mainMenuPage.list.View())
 	case download:
-		rows := make([]table.Row, 0, len(m.downloadPage.usersFiles))
-
-		for _, file := range m.downloadPage.usersFiles {
-			rows = append(rows, table.Row{
-				file.FileId,
-				file.FileName,
-				file.FileSize,
-				file.CreatedAt.AsTime().Format("2006-01-02 15:04"),
-			})
-		}
-
-		m.downloadPage.contentTable.SetRows(rows)
+		updateTable(&m.downloadPage.contentTable, m.downloadPage.usersFiles)
 		b.WriteString(m.downloadPage.contentTable.View())
 	case deleted:
-		rows := make([]table.Row, 0, len(m.deletePage.usersFiles))
-
-		for _, file := range m.deletePage.usersFiles {
-			rows = append(rows, table.Row{
-				file.FileId,
-				file.FileName,
-				file.FileSize,
-				file.CreatedAt.AsTime().Format("2006-01-02 15:04"),
-			})
-		}
-
-		m.deletePage.contentTable.SetRows(rows)
+		updateTable(&m.deletePage.contentTable, m.deletePage.usersFiles)
 		b.WriteString(m.deletePage.contentTable.View())
 	case upload:
 		if m.uploadPage.selectedFile == "" {
@@ -107,6 +87,21 @@ func (m *Model) View() string {
 	b.WriteString(showMessageIfNeeded(m.clientMessage))
 
 	return docStyle.Render(b.String() + "\n")
+}
+
+func updateTable(model *table.Model, data []*storage.UsersFile) {
+	rows := make([]table.Row, 0, len(data))
+
+	for _, file := range data {
+		rows = append(rows, table.Row{
+			file.FileId,
+			file.FileName,
+			file.FileSize,
+			file.CreatedAt.AsTime().Format("2006-01-02 15:04"),
+		})
+	}
+
+	model.SetRows(rows)
 }
 
 func showMessageIfNeeded(err error) string {

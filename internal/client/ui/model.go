@@ -127,5 +127,7 @@ func (m *Model) GetLoginData() *model.Login {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.syncCmd(),
+	)
 }

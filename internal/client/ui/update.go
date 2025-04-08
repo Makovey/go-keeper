@@ -16,12 +16,12 @@ const (
 	enter  = "enter"
 	tab    = "tab"
 
-	startedListSelect1 = "Sign Up"
-	startedListSelect2 = "Sign In"
+	signUpSelect = "Sign Up"
+	signInSelect = "Sign In"
 
-	mainMenuSelect1 = "Upload file"
-	mainMenuSelect2 = "Download file"
-	mainMenuSelect3 = "Delete file"
+	uploadFileSelect   = "Upload file"
+	downloadFileSelect = "Download file"
+	deleteFileSelect   = "Delete file"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -65,10 +65,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				choice := string(i)
 				switch choice {
-				case startedListSelect1:
+				case signUpSelect:
 					m.step = signUp
 					makeActiveInput(&m.signUpPage.name, nil)
-				case startedListSelect2:
+				case signInSelect:
 					m.step = signIn
 					makeActiveInput(&m.signInPage.email, nil)
 				}
@@ -107,10 +107,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				choice := string(i)
 				switch choice {
-				case mainMenuSelect1:
+				case uploadFileSelect:
 					m.step = upload
 					return m, m.uploadPage.picker.Init()
-				case mainMenuSelect2:
+				case downloadFileSelect:
 					data, err := m.storage.GetUsersFiles(m.setTokenToCtx(context.TODO()))
 					if err != nil {
 						m.clientMessage = err
@@ -119,7 +119,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.downloadPage.usersFiles = data
 					m.step = download
 					return m, nil
-				case mainMenuSelect3:
+				case deleteFileSelect:
 					data, err := m.storage.GetUsersFiles(m.setTokenToCtx(context.TODO()))
 					if err != nil {
 						m.clientMessage = err
@@ -192,6 +192,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		m.uploadPage.selectedFile = ""
+	case syncMsg:
+		return m, tea.Batch(
+			m.loadDataCmd(),
+			m.syncCmd(),
+		)
+	case dataMsg:
+		m.downloadPage.usersFiles = msg.data
+		updateTable(&m.downloadPage.contentTable, m.downloadPage.usersFiles)
+		return m, nil
+	case errMsg:
+		m.clientMessage = msg.err
+		return m, nil
 	}
 
 	return m, m.updateModelValue(msg)
