@@ -16,20 +16,9 @@ import (
 	"github.com/Makovey/go-keeper/internal/utils"
 )
 
-var (
-	buildVersion = "N/A" // версия приложения
-	buildDate    = "N/A" // дата сборки
-	buildCommit  = "N/A" // коммит сборки
-)
-
 func main() {
 	log := slog.NewLogger()
 	cfg := config.NewConfig(log)
-
-	log.Info("Starting...")
-	log.Info(buildVersion)
-	log.Info(buildDate)
-	log.Info(buildCommit)
 
 	repo, err := postgres.NewPostgresRepo(cfg)
 	if err != nil {

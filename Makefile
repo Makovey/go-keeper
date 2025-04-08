@@ -4,9 +4,6 @@ SHELL := /bin/bash
 LOCAL_MIGRATION_DIR=./internal/db/migrations
 LOCAL_MIGRATION_DSN="host=localhost port=$(PG_PORT) dbname=$(PG_DATABASE_NAME) user=$(PG_USER) password=$(PG_PASSWORD) sslmode=disable"
 
-build:
-	go build -o ./bin/keeper ./cmd/keeper
-
 mig-s:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} status -v
 

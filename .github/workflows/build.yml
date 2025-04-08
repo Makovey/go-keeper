@@ -1,57 +1,61 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.4'
+
+      - name: Run tests
+        run: go test -v ./...
+
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Необходимо для получения полной истории git
-
-      - name: Get build info
-        id: buildinfo
-        run: |
-          echo "version=$(git describe --tags --always || echo 'N/A')" >> $GITHUB_OUTPUT
-          echo "date=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-          echo "commit=$(git rev-parse --short HEAD || echo 'N/A')" >> $GITHUB_OUTPUT
-
       - uses: actions/setup-go@v4
         with:
           go-version: '1.23.4'
 
-      - name: Prepare bin directory
+      # только для дебага и ревью
+      - name: Copy .env to the build output directory
         run: |
           mkdir -p ./bin/
           cp .env ./bin/
+          cd ./bin
           mv .env env
+          cd ../
 
       - name: Build Windows
-        run: |
-          GOOS=windows GOARCH=amd64 go build \
-            -ldflags "\
-              -X main.buildVersion=${{ steps.buildinfo.outputs.version }} \
-              -X main.buildDate=${{ steps.buildinfo.outputs.date }} \
-              -X main.buildCommit=${{ steps.buildinfo.outputs.commit }}" \
-            -o ./bin/keeper-windows.exe ./cmd/keeper
+        run: GOOS=windows GOARCH=amd64 go build -o ./bin/keeper-windows.exe ./cmd/keeper
 
       - name: Build macOS
-        run: |
-          GOOS=darwin GOARCH=amd64 go build \
-            -ldflags "\
-              -X main.buildVersion=${{ steps.buildinfo.outputs.version }} \
-              -X main.buildDate=${{ steps.buildinfo.outputs.date }} \
-              -X main.buildCommit=${{ steps.buildinfo.outputs.commit }}" \
-            -o ./bin/keeper-macos ./cmd/keeper
+        run: GOOS=darwin GOARCH=amd64 go build -o ./bin/keeper-macos ./cmd/keeper
 
       - name: Build Linux
-        run: |
-          GOOS=linux GOARCH=amd64 go build \
-            -ldflags "\
-              -X main.buildVersion=${{ steps.buildinfo.outputs.version }} \
-              -X main.buildDate=${{ steps.buildinfo.outputs.date }} \
-              -X main.buildCommit=${{ steps.buildinfo.outputs.commit }}" \
-            -o ./bin/keeper-linux ./cmd/keeper
+        run: GOOS=linux GOARCH=amd64 go build -o ./bin/keeper-linux ./cmd/keeper
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: keeper-package
           path: ./bin/**
+
+      - name: Rename Env
+        run: |
+          cd ./bin
+          ls -a
+          mv env .env
+          ls -a

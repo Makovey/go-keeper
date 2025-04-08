@@ -21,9 +21,6 @@
 go.work
 go.work.sum
 
-# binaries
-./bin
-
 #temp
 .idea
 fileStorage
