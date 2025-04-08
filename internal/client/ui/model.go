@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
@@ -22,6 +25,7 @@ const (
 	download
 	deleted
 	upload
+	creditCardUpload
 )
 
 type starterPage struct {
@@ -58,19 +62,26 @@ type uploadPage struct {
 	selectedFile string
 }
 
+type uploadCreditCardPage struct {
+	form             []textinput.Model
+	focused          int
+	validationErrors map[int]string
+}
+
 type Model struct {
-	step          step
-	startedPage   starterPage
-	signUpPage    signUpPage
-	signInPage    signInPage
-	mainMenuPage  mainMenuPage
-	downloadPage  downloadPage
-	deletePage    deletePage
-	uploadPage    uploadPage
-	auth          *grpc.AuthClient
-	storage       *grpc.StorageClient
-	token         string
-	clientMessage error
+	step                 step
+	startedPage          starterPage
+	signUpPage           signUpPage
+	signInPage           signInPage
+	mainMenuPage         mainMenuPage
+	downloadPage         downloadPage
+	deletePage           deletePage
+	uploadPage           uploadPage
+	uploadCreditCardPage uploadCreditCardPage
+	auth                 *grpc.AuthClient
+	storage              *grpc.StorageClient
+	token                string
+	clientMessage        error
 }
 
 func InitialModel(
@@ -93,21 +104,23 @@ func InitialModel(
 			item("Upload file"),
 			item("Download file"),
 			item("Delete file"),
+			item("Credit Card Number"),
 		},
 	)
 	tableContent := tableContent()
 
 	return &Model{
-		step:         startedList,
-		startedPage:  starterPage{starterList},
-		signUpPage:   signUpPage{name: name, email: email, password: password},
-		signInPage:   signInPage{email: email, password: password},
-		mainMenuPage: mainMenuPage{list: mainMenuList},
-		downloadPage: downloadPage{contentTable: tableContent},
-		deletePage:   deletePage{contentTable: tableContent},
-		uploadPage:   uploadPage{picker: filePicker()},
-		auth:         auth,
-		storage:      storage,
+		step:                 startedList,
+		startedPage:          starterPage{starterList},
+		signUpPage:           signUpPage{name: name, email: email, password: password},
+		signInPage:           signInPage{email: email, password: password},
+		mainMenuPage:         mainMenuPage{list: mainMenuList},
+		downloadPage:         downloadPage{contentTable: tableContent},
+		deletePage:           deletePage{contentTable: tableContent},
+		uploadPage:           uploadPage{picker: filePicker()},
+		uploadCreditCardPage: uploadCreditCardPage{form: creditCardModel(), validationErrors: map[int]string{}},
+		auth:                 auth,
+		storage:              storage,
 	}
 }
 
@@ -124,6 +137,24 @@ func (m *Model) GetLoginData() *model.Login {
 		Email:    m.signInPage.email.Value(),
 		Password: m.signInPage.password.Value(),
 	}
+}
+
+func (m *Model) GetCreditCardData() string {
+	var key string
+	var content strings.Builder
+	for i, v := range m.uploadCreditCardPage.form {
+		switch i {
+		case 0:
+			key = "ccn"
+		case 1:
+			key = "exp"
+		case 2:
+			key = "cvv"
+		}
+		content.WriteString(fmt.Sprintf("%s %s ", key, v.Value()))
+	}
+
+	return content.String()
 }
 
 func (m *Model) Init() tea.Cmd {

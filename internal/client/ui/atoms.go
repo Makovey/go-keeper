@@ -2,7 +2,10 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/filepicker"
@@ -15,6 +18,12 @@ import (
 const (
 	defaultWidth = 40
 	listHeight   = 12
+)
+
+const (
+	ccn = iota
+	exp
+	cvv
 )
 
 func mainList(title string, items []list.Item) list.Model {
@@ -96,9 +105,82 @@ func tableContent() table.Model {
 	return t
 }
 
+func creditCardModel() []textinput.Model {
+	var inputs = make([]textinput.Model, 3)
+	inputs[ccn] = textinput.New()
+	inputs[ccn].Placeholder = "4505 **** **** 1234"
+	inputs[ccn].Focus()
+	inputs[ccn].CharLimit = 20
+	inputs[ccn].Width = 30
+	inputs[ccn].Prompt = ""
+	inputs[ccn].Validate = ccnValidator
+
+	inputs[exp] = textinput.New()
+	inputs[exp].Placeholder = "MM/YY "
+	inputs[exp].CharLimit = 5
+	inputs[exp].Width = 5
+	inputs[exp].Prompt = ""
+	inputs[exp].Validate = expValidator
+
+	inputs[cvv] = textinput.New()
+	inputs[cvv].Placeholder = "XXX"
+	inputs[cvv].CharLimit = 3
+	inputs[cvv].Width = 5
+	inputs[cvv].Prompt = ""
+	inputs[cvv].Validate = cvvValidator
+
+	return inputs
+}
+
 func validate(input string) error {
 	if utf8.RuneCountInString(input) < 5 {
 		return errors.New("needs at least 5 characters")
 	}
+	return nil
+}
+
+func ccnValidator(s string) error {
+	if len(s) > 16+3 {
+		return fmt.Errorf("ccn is too long")
+	}
+
+	if len(s) == 0 || len(s)%5 != 0 && (s[len(s)-1] < '0' || s[len(s)-1] > '9') {
+		return fmt.Errorf("ccn is invalid")
+	}
+
+	if len(s)%5 == 0 && s[len(s)-1] != ' ' {
+		return fmt.Errorf("ccn must separate groups with spaces")
+	}
+
+	c := strings.ReplaceAll(s, " ", "")
+	_, err := strconv.ParseInt(c, 10, 64)
+
+	return err
+}
+
+func expValidator(s string) error {
+	e := strings.ReplaceAll(s, "/", "")
+	_, err := strconv.ParseInt(e, 10, 64)
+	if err != nil {
+		return fmt.Errorf("exp is invalid")
+	}
+
+	if len(s) >= 3 && (strings.Index(s, "/") != 2 || strings.LastIndex(s, "/") != 2) {
+		return fmt.Errorf("exp is invalid")
+	}
+
+	return nil
+}
+
+func cvvValidator(s string) error {
+	_, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return fmt.Errorf("cvv is invalid, must be only digits")
+	}
+
+	if len(s) > 3 {
+		return fmt.Errorf("cvv is too long")
+	}
+
 	return nil
 }

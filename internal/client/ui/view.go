@@ -22,6 +22,13 @@ var (
 	errorStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	successStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("30"))
 	noStyle           = lipgloss.NewStyle()
+	inputStyle        = lipgloss.NewStyle().Foreground(hotPink)
+	continueStyle     = lipgloss.NewStyle().Foreground(darkGray)
+)
+
+const (
+	hotPink  = lipgloss.Color("#FF06B7")
+	darkGray = lipgloss.Color("#767676")
 )
 
 type item string
@@ -82,6 +89,27 @@ func (m *Model) View() string {
 			)
 		}
 		b.WriteString("\n" + m.uploadPage.picker.View() + "\n")
+	case creditCardUpload:
+		s := fmt.Sprintf(
+			`
+ %s
+ %s
+
+ %s  %s
+ %s  %s
+
+ %s
+`,
+			inputStyle.Width(30).Render("Card Number"),
+			m.uploadCreditCardPage.form[ccn].View(),
+			inputStyle.Width(6).Render("EXP"),
+			inputStyle.Width(6).Render("CVV"),
+			m.uploadCreditCardPage.form[exp].View(),
+			m.uploadCreditCardPage.form[cvv].View(),
+			continueStyle.Render("Continue ->"),
+		) + "\n"
+
+		b.WriteString(s)
 	}
 
 	b.WriteString(showMessageIfNeeded(m.clientMessage))

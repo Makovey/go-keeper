@@ -5,12 +5,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
 
 	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
+	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 )
@@ -118,6 +120,37 @@ func (s *service) DeleteUsersFile(ctx context.Context, userID, fileID, fileName 
 	}
 
 	return nil
+}
+
+func (s *service) UploadPlainText(ctx context.Context, userID, content string, secure helper.TextSecure) (string, error) {
+	fn := "storage.UploadPlainText"
+
+	var fileNameBuilder strings.Builder
+	switch secure {
+	case helper.Secure:
+		fileNameBuilder.WriteString(fmt.Sprintf("secure -> %s", uuid.NewString()))
+	case helper.Unsecure:
+		fileNameBuilder.WriteString(fmt.Sprintf("unsecure -> %s", uuid.NewString()))
+	}
+
+	// IMPROVEMENT: запрашивать имя файла пользователя
+	if err := s.storager.Save(userID, fileNameBuilder.String(), bufio.NewReader(strings.NewReader(content))); err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	eFile := &entity.File{
+		ID:       uuid.NewString(),
+		OwnerID:  userID,
+		FileName: fileNameBuilder.String(),
+		FileSize: len(content),
+		Path:     fmt.Sprintf("%s/%s", userID, fileNameBuilder.String()),
+	}
+
+	if err := s.repo.SaveFileMetadata(ctx, eFile); err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return fileNameBuilder.String(), nil
 }
 
 func formatFileSize(bytes int) string {

@@ -3,18 +3,22 @@ package ui
 import (
 	"context"
 	"errors"
+	"fmt"
 	"unicode/utf8"
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 const (
-	cancel = "ctrl+c"
-	enter  = "enter"
-	tab    = "tab"
+	cancel   = "ctrl+c"
+	enter    = "enter"
+	tab      = "tab"
+	shiftTab = "shift+tab"
 
 	signUpSelect = "Sign Up"
 	signInSelect = "Sign In"
@@ -22,6 +26,7 @@ const (
 	uploadFileSelect   = "Upload file"
 	downloadFileSelect = "Download file"
 	deleteFileSelect   = "Delete file"
+	creditCardSelect   = "Credit Card Number"
 )
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -50,6 +55,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.step = mainMenu
 				return m, nil
 			case upload:
+				m.step = mainMenu
+				return m, nil
+			case creditCardUpload:
 				m.step = mainMenu
 				return m, nil
 			default:
@@ -128,6 +136,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.deletePage.usersFiles = data
 					m.step = deleted
 					return m, nil
+				case creditCardSelect:
+					m.step = creditCardUpload
+					return m, nil
 				}
 				return m, nil
 			case upload:
@@ -161,6 +172,29 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.removeRowFromDeletePage()
 					m.clientMessage = errors.New("file deleted successfully")
 				}
+			case creditCardUpload:
+				if m.uploadCreditCardPage.focused == len(m.uploadCreditCardPage.form)-1 {
+					if len(m.uploadCreditCardPage.validationErrors) == 0 {
+						name, err := m.storage.UploadPlainText(
+							m.setTokenToCtx(context.Background()),
+							storage.TextType_secure,
+							m.GetCreditCardData(),
+						)
+						if err != nil {
+							m.clientMessage = err
+							return m, nil
+						}
+						m.clientMessage = fmt.Errorf("information successfully saved into file - %s", name)
+					}
+				}
+				m.nextCreditCardInput()
+			}
+		case shiftTab:
+			switch m.step {
+			case creditCardUpload:
+				m.prevCreditCardInput()
+			default:
+				return m, nil
 			}
 		case tab:
 			switch m.step {
@@ -185,10 +219,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					in := []*textinput.Model{&m.signInPage.password}
 					makeActiveInput(&m.signInPage.email, in)
 				}
-			case upload:
-				return m, nil
+			case creditCardUpload:
+				m.nextCreditCardInput()
 			default:
-				break
+				return m, nil
 			}
 		}
 		m.uploadPage.selectedFile = ""
@@ -248,6 +282,34 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 			m.clientMessage = errors.New(path + " is not valid.")
 			m.uploadPage.selectedFile = ""
 		}
+	case creditCardUpload:
+		inputs := m.uploadCreditCardPage.form
+		focused := m.uploadCreditCardPage.focused
+		prevIdx := focused - 1
+		if prevIdx < 0 {
+			prevIdx = len(inputs) - 1
+		}
+
+		var cmds = make([]tea.Cmd, len(inputs))
+		for i := range inputs {
+			inputs[i], cmds[i] = inputs[i].Update(msg)
+		}
+
+		if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
+			if err := inputs[prevIdx].Validate(inputs[prevIdx].Value()); err != nil {
+				m.uploadCreditCardPage.validationErrors[prevIdx] = err.Error()
+				m.clientMessage = err
+			} else {
+				delete(m.uploadCreditCardPage.validationErrors, prevIdx)
+			}
+		}
+
+		for i := range inputs {
+			inputs[i].Blur()
+		}
+		inputs[focused].Focus()
+
+		return tea.Batch(cmds...)
 	}
 
 	return cmd
@@ -294,6 +356,25 @@ func (m *Model) removeRowFromDeletePage() {
 	}
 
 	m.deletePage.contentTable.SetRows(rows)
+}
+
+func (m *Model) nextCreditCardInput() {
+	if m.step != creditCardUpload {
+		return
+	}
+
+	m.uploadCreditCardPage.focused = (m.uploadCreditCardPage.focused + 1) % len(m.uploadCreditCardPage.form)
+}
+
+func (m *Model) prevCreditCardInput() {
+	if m.step != creditCardUpload {
+		return
+	}
+
+	m.uploadCreditCardPage.focused--
+	if m.uploadCreditCardPage.focused < 0 {
+		m.uploadCreditCardPage.focused = len(m.uploadCreditCardPage.form) - 1
+	}
 }
 
 func makeActiveInput(active *textinput.Model, inactive []*textinput.Model) {
