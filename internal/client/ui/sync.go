@@ -10,7 +10,7 @@ import (
 )
 
 func (m *Model) syncCmd() tea.Cmd {
-	return tea.Tick(30*time.Second, func(time.Time) tea.Msg { // TODO: to cfg
+	return tea.Tick(m.updateDuration, func(time.Time) tea.Msg {
 		return syncMsg{}
 	})
 }

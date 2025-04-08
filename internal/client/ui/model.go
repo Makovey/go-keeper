@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
@@ -87,6 +88,7 @@ type Model struct {
 	uploadText           uploadTextPage
 	auth                 *grpc.AuthClient
 	storage              *grpc.StorageClient
+	updateDuration       time.Duration
 	token                string
 	clientMessage        error
 }
@@ -94,6 +96,7 @@ type Model struct {
 func InitialModel(
 	auth *grpc.AuthClient,
 	storage *grpc.StorageClient,
+	updateDuration time.Duration,
 ) *Model {
 	starterList := mainList(
 		"Welcome to auth, choose option:",
@@ -130,6 +133,7 @@ func InitialModel(
 		uploadText:           uploadTextPage{textArea: textArea()},
 		auth:                 auth,
 		storage:              storage,
+		updateDuration:       updateDuration,
 	}
 }
 

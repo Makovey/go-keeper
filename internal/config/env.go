@@ -8,9 +8,11 @@ import (
 )
 
 type envConfig struct {
-	databaseDSN string
-	grpcPort    string
-	secretKey   string
+	databaseDSN          string
+	grpcPort             string
+	secretKey            string
+	clientConnectionHost string
+	updateUIDuration     string
 }
 
 func newEnvConfig() envConfig {
@@ -22,8 +24,10 @@ func newEnvConfig() envConfig {
 	}
 
 	return envConfig{
-		databaseDSN: os.Getenv("DATABASE_DSN"),
-		grpcPort:    os.Getenv("GRPC_PORT"),
-		secretKey:   os.Getenv("SECRET_KEY"),
+		databaseDSN:          os.Getenv("DATABASE_DSN"),
+		grpcPort:             os.Getenv("GRPC_PORT"),
+		secretKey:            os.Getenv("SECRET_KEY"),
+		clientConnectionHost: os.Getenv("CLIENT_CONNECTION_HOST"),
+		updateUIDuration:     os.Getenv("UPDATE_UI_DURATION"),
 	}
 }

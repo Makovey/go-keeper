@@ -11,7 +11,7 @@ import (
 	"github.com/Makovey/go-keeper/internal/utils"
 )
 
-const rootDirForStorage = "fileStorage"
+const rootDirForStorage = "file_storage"
 
 type diskStorager struct {
 	log        logger.Logger

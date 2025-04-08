@@ -123,7 +123,7 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	conn, err := grpc.NewClient(
-		"localhost"+a.cfg.GRPCPort(), // TODO: to cfg
+		a.cfg.ClientConnectionHost()+a.cfg.GRPCPort(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -135,7 +135,7 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	authClient := client.NewAuthClient(a.log, grpcAuth.NewAuthClient(conn))
 	storageClient := client.NewStorageClient(a.log, utils.NewDirManager(), grpcStorage.NewStorageServiceClient(conn))
 
-	p := tea.NewProgram(ui.InitialModel(authClient, storageClient), tea.WithAltScreen())
+	p := tea.NewProgram(ui.InitialModel(authClient, storageClient, a.cfg.UpdateDurationForUI()), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		a.log.Infof("[%s]: can't run ui program, cause: %v", fn, err)
 		return
