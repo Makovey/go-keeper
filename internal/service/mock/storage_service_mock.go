@@ -93,3 +93,18 @@ func (mr *MockServiceStorageMockRecorder) UploadFile(ctx, file, userID interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockServiceStorage)(nil).UploadFile), ctx, file, userID)
 }
+
+// UploadPlainText mocks base method.
+func (m *MockServiceStorage) UploadPlainText(ctx context.Context, userID, content string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadPlainText", ctx, userID, content)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadPlainText indicates an expected call of UploadPlainText.
+func (mr *MockServiceStorageMockRecorder) UploadPlainText(ctx, userID, content interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadPlainText", reflect.TypeOf((*MockServiceStorage)(nil).UploadPlainText), ctx, userID, content)
+}

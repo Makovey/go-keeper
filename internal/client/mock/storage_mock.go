@@ -10,10 +10,11 @@ import (
 )
 
 type storageClientMock struct {
-	uploadStream      grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse]
-	downloadStream    grpc.ServerStreamingClient[storage.DownloadResponse]
-	usersFileResponse *storage.GetUsersFileResponse
-	error             error
+	uploadStream        grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse]
+	downloadStream      grpc.ServerStreamingClient[storage.DownloadResponse]
+	usersFileResponse   *storage.GetUsersFileResponse
+	uploadPlainResponse *storage.UploadPlainTextTypeResponse
+	error               error
 }
 
 func NewStorageWithUploadStream(
@@ -43,6 +44,16 @@ func NewStorageWitUsersFile(
 	return &storageClientMock{
 		usersFileResponse: usersFileResponse,
 		error:             error,
+	}
+}
+
+func NewStorageWitUploadPlainText(
+	uploadResponse *storage.UploadPlainTextTypeResponse,
+	error error,
+) storage.StorageServiceClient {
+	return &storageClientMock{
+		uploadPlainResponse: uploadResponse,
+		error:               error,
 	}
 }
 
@@ -91,4 +102,16 @@ func (s *storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.Del
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *storageClientMock) UploadPlainTextType(
+	ctx context.Context,
+	in *storage.UploadPlainTextTypeRequest,
+	opts ...grpc.CallOption,
+) (*storage.UploadPlainTextTypeResponse, error) {
+	if s.error != nil {
+		return nil, s.error
+	}
+
+	return s.uploadPlainResponse, nil
 }

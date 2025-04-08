@@ -1,18 +1,25 @@
 package utils
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
+	"strings"
+
+	"github.com/dustin/go-humanize"
 )
 
+//go:generate mockgen -source=crypto.go -destination=mock/crypto_mock.go -package=mock
 type Crypto interface {
 	EncryptString(text string, secret string) (string, error)
 	DecryptString(text string, secret string) (string, error)
+	EncryptReader(reader *bufio.Reader, secret string) (*bufio.Reader, error)
 }
 
 type crypto struct {
@@ -69,4 +76,31 @@ func (c *crypto) DecryptString(text string, secret string) (string, error) {
 	stream.XORKeyStream(ciphertext, ciphertext)
 
 	return string(ciphertext), nil
+}
+
+func (c *crypto) EncryptReader(reader *bufio.Reader, secret string) (*bufio.Reader, error) {
+	fn := "utils.EncryptReader"
+
+	var b strings.Builder
+	buf := make([]byte, humanize.MByte)
+
+	for {
+		n, err := reader.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+
+		if n == 0 {
+			break
+		}
+
+		b.Write(buf[:n])
+	}
+
+	encrypted, err := c.EncryptString(b.String(), secret)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return bufio.NewReader(strings.NewReader(encrypted)), nil
 }

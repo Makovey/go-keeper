@@ -343,3 +343,60 @@ func TestStorageClient_DeleteFile(t *testing.T) {
 		})
 	}
 }
+
+func TestStorageClient_UploadPlainText(t *testing.T) {
+	type args struct {
+		content string
+	}
+
+	type expects struct {
+		clientResp *storage.UploadPlainTextTypeResponse
+		clientErr  error
+		wantErr    bool
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		expects expects
+	}{
+		{
+			name: "client successfully upload plain text",
+			expects: expects{
+				clientResp: &storage.UploadPlainTextTypeResponse{
+					FileName: "file1.txt",
+				},
+			},
+		},
+		{
+			name: "client upload plain text failed: client error",
+			expects: expects{
+				clientErr: errors.New("grpc client error"),
+				wantErr:   true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			m := mock.NewStorageWitUploadPlainText(
+				tt.expects.clientResp,
+				tt.expects.clientErr,
+			)
+
+			dir := utilsMock.NewMockDirManager(ctrl)
+			client := NewStorageClient(dummy.NewDummyLogger(), dir, m)
+
+			resp, err := client.UploadPlainText(context.Background(), tt.args.content)
+			if tt.expects.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, resp)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, resp)
+			}
+		})
+	}
+}

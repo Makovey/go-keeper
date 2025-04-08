@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -65,7 +64,7 @@ func (s *service) UploadFile(ctx context.Context, file model.File, userID string
 		Path:     fmt.Sprintf("%s/%s", userID, file.FileName),
 	}
 
-	encryptedData, err := s.encryptReader(&file.Data, userID+s.cfg.SecretKey())
+	encryptedData, err := s.crypto.EncryptReader(&file.Data, userID+s.cfg.SecretKey())
 	if err != nil {
 		return "", fmt.Errorf("[%s]: failed to encrypt file: %v", fn, err)
 	}
@@ -178,31 +177,4 @@ func formatFileSize(bytes int) string {
 	default:
 		return fmt.Sprintf("%d B", bytes)
 	}
-}
-
-func (s *service) encryptReader(reader *bufio.Reader, secret string) (*bufio.Reader, error) {
-	fn := "storage.encryptReader"
-
-	var b strings.Builder
-	buf := make([]byte, humanize.MByte)
-
-	for {
-		n, err := reader.Read(buf)
-		if err != nil && err != io.EOF {
-			return nil, err
-		}
-
-		if n == 0 {
-			break
-		}
-
-		b.Write(buf[:n])
-	}
-
-	encrypted, err := s.crypto.EncryptString(b.String(), secret)
-	if err != nil {
-		return nil, fmt.Errorf("[%s]: %w", fn, err)
-	}
-
-	return bufio.NewReader(strings.NewReader(encrypted)), nil
 }

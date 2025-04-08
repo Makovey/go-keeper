@@ -53,7 +53,7 @@ func TestServer_UploadFile(t *testing.T) {
 			expects: expects{servAns: uuid.NewString(), result: codes.OK},
 		},
 		{
-			name: "failed to upload file: invalid jwtToken",
+			name: "failed to upload file: invalid userID",
 			args: args{
 				userID: "testToken",
 				chunks: []*storage.UploadRequest{

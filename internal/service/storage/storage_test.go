@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,9 +12,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Makovey/go-keeper/internal/config/stub"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
 	"github.com/Makovey/go-keeper/internal/repository/mock"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
+	utilsMock "github.com/Makovey/go-keeper/internal/utils/mock"
 )
 
 func Test_service_UploadFile(t *testing.T) {
@@ -69,7 +73,10 @@ func Test_service_UploadFile(t *testing.T) {
 			repoMock := mock.NewMockRepositoryStorage(ctrl)
 			repoMock.EXPECT().SaveFileMetadata(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
 
-			s := NewStorageService(repoMock, storageMock)
+			cryptoMock := utilsMock.NewMockCrypto(ctrl)
+			cryptoMock.EXPECT().EncryptReader(gomock.Any(), gomock.Any()).Return(bufio.NewReader(bytes.NewReader([]byte("encrypted"))), nil).AnyTimes()
+
+			s := NewStorageService(repoMock, storageMock, cryptoMock, stub.NewStubConfig())
 			got, err := s.UploadFile(context.Background(), *tt.args.file, tt.args.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -137,7 +144,10 @@ func Test_service_DownloadFile(t *testing.T) {
 			storageMock := mock.NewMockFileStorager(ctrl)
 			storageMock.EXPECT().Get(gomock.Any()).Return([]byte("bytes from file"), tt.expects.storagerErr).AnyTimes()
 
-			s := NewStorageService(repoMock, storageMock)
+			cryptoMock := utilsMock.NewMockCrypto(ctrl)
+			cryptoMock.EXPECT().DecryptString(gomock.Any(), gomock.Any()).Return("bytes from file", nil).AnyTimes()
+
+			s := NewStorageService(repoMock, storageMock, cryptoMock, stub.NewStubConfig())
 			got, err := s.DownloadFile(context.Background(), tt.args.userID, tt.args.fileID)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -198,7 +208,9 @@ func Test_service_GetUsersFiles(t *testing.T) {
 			repoMock.EXPECT().GetUsersFiles(gomock.Any(), tt.args.userID).Return(tt.expects.repoAns, tt.expects.repoError).AnyTimes()
 
 			storageMock := mock.NewMockFileStorager(ctrl)
-			s := NewStorageService(repoMock, storageMock)
+
+			cryptoMock := utilsMock.NewMockCrypto(ctrl)
+			s := NewStorageService(repoMock, storageMock, cryptoMock, stub.NewStubConfig())
 			got, err := s.GetUsersFiles(context.Background(), tt.args.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -255,12 +267,80 @@ func Test_service_DeleteUsersFile(t *testing.T) {
 			storageMock := mock.NewMockFileStorager(ctrl)
 			storageMock.EXPECT().Delete(fmt.Sprintf("%s/%s", tt.args.userID, tt.args.fileName)).Return(tt.expects.storagerErr).AnyTimes()
 
-			s := NewStorageService(repoMock, storageMock)
+			cryptoMock := utilsMock.NewMockCrypto(ctrl)
+
+			s := NewStorageService(repoMock, storageMock, cryptoMock, stub.NewStubConfig())
 			err := s.DeleteUsersFile(context.Background(), tt.args.userID, tt.args.fileID, tt.args.fileName)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_service_UploadPlainText(t *testing.T) {
+	type args struct {
+		userID  string
+		content string
+	}
+
+	type expects struct {
+		cryptoRes   string
+		cryptoErr   error
+		storagerErr error
+		repoError   error
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		expects expects
+		wantErr bool
+	}{
+		{
+			name:    "successfully upload plain text",
+			expects: expects{},
+		},
+		{
+			name:    "failed to upload plain text: repository error",
+			expects: expects{cryptoErr: errors.New("unexpected error")},
+			wantErr: true,
+		},
+		{
+			name:    "failed to upload plain text: repository error",
+			expects: expects{repoError: errors.New("unexpected error")},
+			wantErr: true,
+		},
+		{
+			name:    "failed to upload plain text: storage error",
+			expects: expects{storagerErr: errors.New("unexpected error")},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repoMock := mock.NewMockRepositoryStorage(ctrl)
+			repoMock.EXPECT().SaveFileMetadata(gomock.Any(), gomock.Any()).Return(tt.expects.repoError).AnyTimes()
+
+			storageMock := mock.NewMockFileStorager(ctrl)
+			storageMock.EXPECT().Save(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.expects.storagerErr).AnyTimes()
+
+			cryptoMock := utilsMock.NewMockCrypto(ctrl)
+			cryptoMock.EXPECT().EncryptString(gomock.Any(), gomock.Any()).Return(tt.expects.cryptoRes, tt.expects.cryptoErr).AnyTimes()
+
+			s := NewStorageService(repoMock, storageMock, cryptoMock, stub.NewStubConfig())
+			res, err := s.UploadPlainText(context.Background(), tt.args.userID, tt.args.content)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, res)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res)
 			}
 		})
 	}
