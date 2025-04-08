@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 )
 
@@ -31,22 +30,4 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 	}
 
 	return userID, nil
-}
-
-type TextSecure string
-
-const (
-	Secure   TextSecure = "secure"
-	Unsecure TextSecure = "unsecure"
-)
-
-func MapProtoToLocalTextSecure(textType storage.TextType) TextSecure {
-	switch textType {
-	case storage.TextType_secure:
-		return Secure
-	case storage.TextType_unsecure:
-		return Unsecure
-	}
-
-	return Unsecure
 }

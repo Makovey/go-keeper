@@ -21,15 +21,13 @@ func (r *Repo) SaveFileMetadata(ctx context.Context, fileData *entity.File) erro
 				owner_user_id, 
 				file_name, 
 				file_size, 
-				path,
-				is_encrypted
-		) VALUES ($1, $2, $3, $4, $5, $6)`,
+				path
+		) VALUES ($1, $2, $3, $4, $5)`,
 		fileData.ID,
 		fileData.OwnerID,
 		fileData.FileName,
 		fileData.FileSize,
 		fileData.Path,
-		fileData.IsEncrypted,
 	)
 
 	if err != nil {
@@ -50,7 +48,7 @@ func (r *Repo) GetFileMetadata(ctx context.Context, userID, fileID string) (*ent
 	)
 
 	var file entity.File
-	err := row.Scan(&file.ID, &file.OwnerID, &file.FileName, &file.FileSize, &file.Path, &file.IsEncrypted, &file.CreatedAt)
+	err := row.Scan(&file.ID, &file.OwnerID, &file.FileName, &file.FileSize, &file.Path, &file.CreatedAt)
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):

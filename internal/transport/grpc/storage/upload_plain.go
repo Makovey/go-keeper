@@ -18,7 +18,7 @@ func (s *Server) UploadPlainTextType(ctx context.Context, req *storage.UploadPla
 		return nil, status.Error(codes.Unauthenticated, helper.ReloginAndTryAgain)
 	}
 
-	name, err := s.service.UploadPlainText(ctx, userID, req.GetContent(), helper.MapProtoToLocalTextSecure(req.GetType()))
+	name, err := s.service.UploadPlainText(ctx, userID, req.GetContent())
 	if err != nil {
 		s.log.Errorf("[%s]: %v", fn, err)
 		return nil, status.Error(codes.Internal, helper.InternalServerError)

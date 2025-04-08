@@ -171,12 +171,11 @@ func (s *StorageClient) DeleteFile(
 
 func (s *StorageClient) UploadPlainText(
 	ctx context.Context,
-	textType storage.TextType,
 	content string,
 ) (string, error) {
 	fn := "grpc.DeleteFile"
 
-	req := &storage.UploadPlainTextTypeRequest{Content: content, Type: textType}
+	req := &storage.UploadPlainTextTypeRequest{Content: content}
 	resp, err := s.client.UploadPlainTextType(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("[%s]: failed to upload plain text: %v", fn, err)

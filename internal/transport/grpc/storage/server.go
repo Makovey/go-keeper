@@ -5,7 +5,6 @@ import (
 
 	"github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
-	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
@@ -15,7 +14,7 @@ type ServiceStorage interface {
 	DownloadFile(ctx context.Context, userID, fileID string) (*model.File, error)
 	GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error)
 	DeleteUsersFile(ctx context.Context, userID, fileID, fileName string) error
-	UploadPlainText(ctx context.Context, userID, content string, secure helper.TextSecure) (string, error)
+	UploadPlainText(ctx context.Context, userID, content string) (string, error)
 }
 
 type Server struct {

@@ -48,14 +48,8 @@ message DeleteUsersFileRequest {
   string file_id = 2;
 }
 
-enum TextType {
-  unsecure = 0;
-  secure = 1;
-}
-
 message UploadPlainTextTypeRequest {
   string content = 1;
-  TextType type = 2;
 }
 
 message UploadPlainTextTypeResponse {

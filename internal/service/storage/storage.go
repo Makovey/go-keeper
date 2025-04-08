@@ -2,9 +2,9 @@ package storage
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -12,7 +12,6 @@ import (
 
 	"github.com/Makovey/go-keeper/internal/config"
 	"github.com/Makovey/go-keeper/internal/repository/entity"
-	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
 	"github.com/Makovey/go-keeper/internal/utils"
@@ -66,7 +65,12 @@ func (s *service) UploadFile(ctx context.Context, file model.File, userID string
 		Path:     fmt.Sprintf("%s/%s", userID, file.FileName),
 	}
 
-	if err := s.storager.Save(userID, file.FileName, &file.Data); err != nil {
+	encryptedData, err := s.encryptReader(&file.Data, userID+s.cfg.SecretKey())
+	if err != nil {
+		return "", fmt.Errorf("[%s]: failed to encrypt file: %v", fn, err)
+	}
+
+	if err := s.storager.Save(userID, file.FileName, encryptedData); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
@@ -90,16 +94,12 @@ func (s *service) DownloadFile(ctx context.Context, userID, fileID string) (*mod
 		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
 	}
 
-	if file.IsEncrypted {
-		decrypted, err := s.crypto.DecryptString(string(data), userID+s.cfg.SecretKey())
-		if err != nil {
-			return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
-		}
-
-		data = []byte(decrypted)
+	decrypted, err := s.crypto.DecryptString(string(data), userID+s.cfg.SecretKey())
+	if err != nil {
+		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
 	}
 
-	return &model.File{Data: *bufio.NewReader(bytes.NewReader(data)), FileName: file.FileName, FileSize: file.FileSize}, nil
+	return &model.File{Data: *bufio.NewReader(strings.NewReader(decrypted)), FileName: file.FileName, FileSize: file.FileSize}, nil
 }
 
 func (s *service) GetUsersFiles(ctx context.Context, userID string) ([]*model.ExtendedInfoFile, error) {
@@ -137,46 +137,34 @@ func (s *service) DeleteUsersFile(ctx context.Context, userID, fileID, fileName 
 	return nil
 }
 
-func (s *service) UploadPlainText(ctx context.Context, userID, content string, secure helper.TextSecure) (string, error) {
+func (s *service) UploadPlainText(ctx context.Context, userID, content string) (string, error) {
 	fn := "storage.UploadPlainText"
 
-	var fileNameBuilder strings.Builder
-	var isEncrypted bool
-	var err error
+	// IMPROVEMENT: запрашивать имя файла пользователя
+	fileName := fmt.Sprintf("%s.txt", uuid.NewString())
 
-	switch secure {
-	case helper.Secure:
-		content, err = s.crypto.EncryptString(content, userID+s.cfg.SecretKey())
-		if err != nil {
-			return "", fmt.Errorf("[%s]: %w", fn, err)
-		}
-
-		fileNameBuilder.WriteString(fmt.Sprintf("secure: %s", uuid.NewString()))
-		isEncrypted = true
-	case helper.Unsecure:
-		fileNameBuilder.WriteString(fmt.Sprintf("%s", uuid.NewString()))
-		isEncrypted = false
+	content, err := s.crypto.EncryptString(content, userID+s.cfg.SecretKey())
+	if err != nil {
+		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	// IMPROVEMENT: запрашивать имя файла пользователя
-	if err = s.storager.Save(userID, fileNameBuilder.String(), bufio.NewReader(strings.NewReader(content))); err != nil {
+	if err = s.storager.Save(userID, fileName, bufio.NewReader(strings.NewReader(content))); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	eFile := &entity.File{
-		ID:          uuid.NewString(),
-		OwnerID:     userID,
-		FileName:    fileNameBuilder.String(),
-		FileSize:    len(content),
-		Path:        fmt.Sprintf("%s/%s", userID, fileNameBuilder.String()),
-		IsEncrypted: isEncrypted,
+		ID:       uuid.NewString(),
+		OwnerID:  userID,
+		FileName: fileName,
+		FileSize: len(content),
+		Path:     fmt.Sprintf("%s/%s", userID, fileName),
 	}
 
 	if err = s.repo.SaveFileMetadata(ctx, eFile); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	return fileNameBuilder.String(), nil
+	return fileName, nil
 }
 
 func formatFileSize(bytes int) string {
@@ -190,4 +178,31 @@ func formatFileSize(bytes int) string {
 	default:
 		return fmt.Sprintf("%d B", bytes)
 	}
+}
+
+func (s *service) encryptReader(reader *bufio.Reader, secret string) (*bufio.Reader, error) {
+	fn := "storage.encryptReader"
+
+	var b strings.Builder
+	buf := make([]byte, humanize.MByte)
+
+	for {
+		n, err := reader.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+
+		if n == 0 {
+			break
+		}
+
+		b.Write(buf[:n])
+	}
+
+	encrypted, err := s.crypto.EncryptString(b.String(), secret)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
+	}
+
+	return bufio.NewReader(strings.NewReader(encrypted)), nil
 }

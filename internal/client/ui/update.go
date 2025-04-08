@@ -10,8 +10,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 const (
@@ -177,7 +175,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(m.uploadCreditCardPage.validationErrors) == 0 {
 						name, err := m.storage.UploadPlainText(
 							m.setTokenToCtx(context.Background()),
-							storage.TextType_secure,
 							m.GetCreditCardData(),
 						)
 						if err != nil {

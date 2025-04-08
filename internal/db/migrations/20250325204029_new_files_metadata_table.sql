@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS files_metadata (
     file_name VARCHAR(100) NOT NULL,
     file_size bigint NOT NULL,
     path VARCHAR(255) NOT NULL,
-    is_encrypted bool DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') NOT NULL
 );
 -- +goose StatementEnd
