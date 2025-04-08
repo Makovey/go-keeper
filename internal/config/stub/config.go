@@ -1,11 +1,17 @@
 package stub
 
-import "github.com/Makovey/go-keeper/internal/config"
+import (
+	"time"
+
+	"github.com/Makovey/go-keeper/internal/config"
+)
 
 type configStub struct {
-	databaseDSN string
-	grpcPort    string
-	secretKey   string
+	databaseDSN      string
+	grpcPort         string
+	secretKey        string
+	clientHost       string
+	updateUIDuration time.Duration
 }
 
 func NewStubConfig() config.Config {
@@ -22,4 +28,12 @@ func (c *configStub) GRPCPort() string {
 
 func (c *configStub) SecretKey() string {
 	return c.secretKey
+}
+
+func (c *configStub) ClientConnectionHost() string {
+	return c.clientHost
+}
+
+func (c *configStub) UpdateDurationForUI() time.Duration {
+	return c.updateUIDuration
 }
