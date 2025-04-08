@@ -29,29 +29,33 @@ jobs:
         with:
           go-version: '1.23.4'
 
+      # только для дебага и ревью
+      - name: Copy .env to the build output directory
+        run: |
+          mkdir -p ./bin/
+          cp .env ./bin/
+          cd ./bin
+          mv .env env
+          cd ../
+
       - name: Build Windows
-        run: GOOS=windows GOARCH=amd64 go build -o keeper-windows.exe ./cmd/keeper
+        run: GOOS=windows GOARCH=amd64 go build -o ./bin/keeper-windows.exe ./cmd/keeper
 
       - name: Build macOS
-        run: GOOS=darwin GOARCH=amd64 go build -o keeper-macos ./cmd/keeper
+        run: GOOS=darwin GOARCH=amd64 go build -o ./bin/keeper-macos ./cmd/keeper
 
       - name: Build Linux
-        run: GOOS=linux GOARCH=amd64 go build -o keeper-linux ./cmd/keeper
+        run: GOOS=linux GOARCH=amd64 go build -o ./bin/keeper-linux ./cmd/keeper
 
-      - name: Upload Windows binary
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: keeper-windows
-          path: keeper-windows.exe
+          name: keeper-package
+          path: ./bin/**
 
-      - name: Upload macOS binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: keeper-macos
-          path: keeper-macos
-
-      - name: Upload Linux binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: keeper-linux
-          path: keeper-linux
+      - name: Rename Env
+        run: |
+          cd ./bin
+          ls -a
+          mv env .env
+          ls -a
