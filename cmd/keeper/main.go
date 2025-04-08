@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	syslog "log"
 
 	"github.com/Makovey/go-keeper/internal/app"
@@ -26,10 +27,9 @@ func main() {
 	log := slog.NewLogger()
 	cfg := config.NewConfig(log)
 
-	log.Info("Starting...")
-	log.Info(buildVersion)
-	log.Info(buildDate)
-	log.Info(buildCommit)
+	log.Info(fmt.Sprintf("build version: %s", buildVersion))
+	log.Info(fmt.Sprintf("build date: %s", buildDate))
+	log.Info(fmt.Sprintf("build commit: %s", buildCommit))
 
 	repo, err := postgres.NewPostgresRepo(cfg)
 	if err != nil {

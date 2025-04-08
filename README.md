@@ -2,15 +2,10 @@
 
 Из исходников:
 ```
-1. docker-compose up
-2. make mig-u
-3. make build
-```
-
-Сборки из CI:
-```
-https://github.com/Makovey/go-keeper/actions
-ВАЖНО: убедиться что .env в той же директории, что и бинарь
+1. go mod tidy
+2. docker-compose up
+3. make mig-u
+4. make build || go run ./...
 ```
 
 <h3>Сервер должен реализовывать следующую бизнес-логику:</h3>
