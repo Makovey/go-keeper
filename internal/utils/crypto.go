@@ -15,6 +15,9 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// Crypto интерфейс для шифорования всего контента юзера, на сервере файлы лежат в закодирванном виде,
+// при выдаче клиенту - раскодируются
+//
 //go:generate mockgen -source=crypto.go -destination=mock/crypto_mock.go -package=mock
 type Crypto interface {
 	EncryptString(text string, secret string) (string, error)

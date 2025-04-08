@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+// DirManager по-сути проксируется все вызовы os.
+// нужен для мокирования при тестировании
+//
 //go:generate mockgen -source=dir_manager.go -destination=mock/dir_manager_mock.go -package=mock
 type DirManager interface {
 	CreateDir(rootDir, path string) error

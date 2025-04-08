@@ -67,18 +67,40 @@ func (m *Model) View() string {
 	case signUp:
 		b.WriteString(m.signUpPage.name.View() + "\n")
 		b.WriteString(m.signUpPage.email.View() + "\n")
-		b.WriteString(m.signUpPage.password.View() + "\n")
+		b.WriteString(m.signUpPage.password.View() + "\n\n")
+		b.WriteString(continueStyle.Render("-> ↹ to switch input") + "\n")
+		b.WriteString(continueStyle.Render("-> ↵  when fields is filled") + "\n")
+		b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n\n")
 	case signIn:
 		b.WriteString(m.signInPage.email.View() + "\n")
-		b.WriteString(m.signInPage.password.View() + "\n")
+		b.WriteString(m.signInPage.password.View() + "\n\n")
+		b.WriteString(continueStyle.Render("-> ↹ to switch input") + "\n")
+		b.WriteString(continueStyle.Render("-> ↵  when fields is filled") + "\n")
+		b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n\n")
 	case mainMenu:
 		b.WriteString(m.mainMenuPage.list.View())
 	case download:
 		updateTable(&m.downloadPage.contentTable, m.downloadPage.usersFiles)
-		b.WriteString(m.downloadPage.contentTable.View())
+		b.WriteString(m.downloadPage.contentTable.View() + "\n\n")
+		if len(m.downloadPage.usersFiles) == 0 {
+			b.WriteString(focusedStyle.Render("you haven't files yet") + "\n")
+		} else {
+			b.WriteString(continueStyle.Render("-> ↑ to navigate up") + "\n")
+			b.WriteString(continueStyle.Render("-> ↓ to navigate down") + "\n")
+			b.WriteString(continueStyle.Render("-> ↵ to download file") + "\n")
+			b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n\n")
+		}
 	case deleted:
 		updateTable(&m.deletePage.contentTable, m.deletePage.usersFiles)
-		b.WriteString(m.deletePage.contentTable.View())
+		b.WriteString(m.deletePage.contentTable.View() + "\n\n")
+		if len(m.deletePage.usersFiles) == 0 {
+			b.WriteString(focusedStyle.Render("you haven't files yet") + "\n")
+		} else {
+			b.WriteString(continueStyle.Render("-> ↑ to navigate up") + "\n")
+			b.WriteString(continueStyle.Render("-> ↓ to navigate down") + "\n")
+			b.WriteString(continueStyle.Render("-> ↵ to delete file") + "\n")
+			b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n\n")
+		}
 	case upload:
 		if m.uploadPage.selectedFile == "" {
 			b.WriteString("Pick a file: \n")
@@ -88,7 +110,11 @@ func (m *Model) View() string {
 				"<< - select this file one more time, to confirm uploading\n",
 			)
 		}
-		b.WriteString("\n" + m.uploadPage.picker.View() + "\n")
+		b.WriteString("\n" + m.uploadPage.picker.View() + "\n\n")
+		b.WriteString(continueStyle.Render("-> ← to UP into file hierarchy") + "\n")
+		b.WriteString(continueStyle.Render("-> → to DOWN into file hierarchy") + "\n")
+		b.WriteString(continueStyle.Render("-> ↵ to choose file") + "\n")
+		b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n\n")
 	case creditCardUpload:
 		s := fmt.Sprintf(
 			`
@@ -97,8 +123,6 @@ func (m *Model) View() string {
 
  %s  %s
  %s  %s
-
- %s
 `,
 			inputStyle.Width(30).Render("Card Number"),
 			m.uploadCreditCardPage.form[ccn].View(),
@@ -106,12 +130,16 @@ func (m *Model) View() string {
 			inputStyle.Width(6).Render("CVV"),
 			m.uploadCreditCardPage.form[exp].View(),
 			m.uploadCreditCardPage.form[cvv].View(),
-			continueStyle.Render("Continue ->"),
 		) + "\n"
 
 		b.WriteString(s)
+		b.WriteString(continueStyle.Render("-> ↹ to switch input") + "\n")
+		b.WriteString(continueStyle.Render("-> ↵  when field is filled") + "\n")
+		b.WriteString(continueStyle.Render("-> ctrl+c to move back") + "\n")
 	case uploadText:
-		b.WriteString(m.uploadText.textArea.View())
+		b.WriteString(m.uploadText.textArea.View() + "\n\n")
+		b.WriteString(continueStyle.Render("-> ↵ to break the line") + "\n")
+		b.WriteString(continueStyle.Render("-> ctrl+s to save text") + "\n\n")
 	}
 
 	b.WriteString(showMessageIfNeeded(m.clientMessage))
