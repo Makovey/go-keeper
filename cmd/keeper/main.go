@@ -30,6 +30,8 @@ func main() {
 	sService := storageService.NewStorageService(
 		repo,
 		file_storager.NewDiskStorager(log, utils.NewDirManager()),
+		utils.NewCrypto(),
+		cfg,
 	)
 
 	authServer := auth.NewAuthServer(log, aService)

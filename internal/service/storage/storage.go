@@ -15,6 +15,7 @@ import (
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/storage"
+	"github.com/Makovey/go-keeper/internal/utils"
 )
 
 type FileStorager interface {
@@ -36,16 +37,21 @@ type RepositoryStorage interface {
 type service struct {
 	repo     RepositoryStorage
 	storager FileStorager
+	crypto   utils.Crypto
 	cfg      config.Config
 }
 
 func NewStorageService(
 	repo RepositoryStorage,
 	storager FileStorager,
+	crypto utils.Crypto,
+	cfg config.Config,
 ) storage.ServiceStorage {
 	return &service{
 		repo:     repo,
 		storager: storager,
+		crypto:   crypto,
+		cfg:      cfg,
 	}
 }
 
@@ -82,6 +88,15 @@ func (s *service) DownloadFile(ctx context.Context, userID, fileID string) (*mod
 	data, err := s.storager.Get(file.Path)
 	if err != nil {
 		return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
+	}
+
+	if file.IsEncrypted {
+		decrypted, err := s.crypto.DecryptString(string(data), userID+s.cfg.SecretKey())
+		if err != nil {
+			return &model.File{}, fmt.Errorf("[%s]: %v", fn, err)
+		}
+
+		data = []byte(decrypted)
 	}
 
 	return &model.File{Data: *bufio.NewReader(bytes.NewReader(data)), FileName: file.FileName, FileSize: file.FileSize}, nil
@@ -126,27 +141,38 @@ func (s *service) UploadPlainText(ctx context.Context, userID, content string, s
 	fn := "storage.UploadPlainText"
 
 	var fileNameBuilder strings.Builder
+	var isEncrypted bool
+	var err error
+
 	switch secure {
 	case helper.Secure:
-		fileNameBuilder.WriteString(fmt.Sprintf("secure -> %s", uuid.NewString()))
+		content, err = s.crypto.EncryptString(content, userID+s.cfg.SecretKey())
+		if err != nil {
+			return "", fmt.Errorf("[%s]: %w", fn, err)
+		}
+
+		fileNameBuilder.WriteString(fmt.Sprintf("secure: %s", uuid.NewString()))
+		isEncrypted = true
 	case helper.Unsecure:
-		fileNameBuilder.WriteString(fmt.Sprintf("unsecure -> %s", uuid.NewString()))
+		fileNameBuilder.WriteString(fmt.Sprintf("%s", uuid.NewString()))
+		isEncrypted = false
 	}
 
 	// IMPROVEMENT: запрашивать имя файла пользователя
-	if err := s.storager.Save(userID, fileNameBuilder.String(), bufio.NewReader(strings.NewReader(content))); err != nil {
+	if err = s.storager.Save(userID, fileNameBuilder.String(), bufio.NewReader(strings.NewReader(content))); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	eFile := &entity.File{
-		ID:       uuid.NewString(),
-		OwnerID:  userID,
-		FileName: fileNameBuilder.String(),
-		FileSize: len(content),
-		Path:     fmt.Sprintf("%s/%s", userID, fileNameBuilder.String()),
+		ID:          uuid.NewString(),
+		OwnerID:     userID,
+		FileName:    fileNameBuilder.String(),
+		FileSize:    len(content),
+		Path:        fmt.Sprintf("%s/%s", userID, fileNameBuilder.String()),
+		IsEncrypted: isEncrypted,
 	}
 
-	if err := s.repo.SaveFileMetadata(ctx, eFile); err != nil {
+	if err = s.repo.SaveFileMetadata(ctx, eFile); err != nil {
 		return "", fmt.Errorf("[%s]: %w", fn, err)
 	}
 

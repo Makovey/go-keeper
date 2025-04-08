@@ -184,7 +184,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							m.clientMessage = err
 							return m, nil
 						}
-						m.clientMessage = fmt.Errorf("information successfully saved into file - %s", name)
+						m.clientMessage = fmt.Errorf("information successfully saved into file - %s, press ctrl+c to back", name)
 					}
 				}
 				m.nextCreditCardInput()
