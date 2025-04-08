@@ -110,6 +110,8 @@ func (m *Model) View() string {
 		) + "\n"
 
 		b.WriteString(s)
+	case uploadText:
+		b.WriteString(m.uploadText.textArea.View())
 	}
 
 	b.WriteString(showMessageIfNeeded(m.clientMessage))

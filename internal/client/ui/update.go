@@ -17,6 +17,7 @@ const (
 	enter    = "enter"
 	tab      = "tab"
 	shiftTab = "shift+tab"
+	save     = "ctrl+s"
 
 	signUpSelect = "Sign Up"
 	signInSelect = "Sign In"
@@ -25,7 +26,10 @@ const (
 	downloadFileSelect = "Download file"
 	deleteFileSelect   = "Delete file"
 	creditCardSelect   = "Credit Card Number"
+	plainTextSelect    = "Plain text"
 )
+
+// IMPROVEMENT: разбить UI компоненты и обработку на разные слои
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -56,6 +60,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.step = mainMenu
 				return m, nil
 			case creditCardUpload:
+				m.step = mainMenu
+				return m, nil
+			case uploadText:
 				m.step = mainMenu
 				return m, nil
 			default:
@@ -137,6 +144,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case creditCardSelect:
 					m.step = creditCardUpload
 					return m, nil
+				case plainTextSelect:
+					m.step = uploadText
+					return m, nil
 				}
 				return m, nil
 			case upload:
@@ -181,7 +191,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							m.clientMessage = err
 							return m, nil
 						}
-						m.clientMessage = fmt.Errorf("information successfully saved into file - %s, press ctrl+c to back", name)
+						m.clientMessage = fmt.Errorf("credit card information successfully saved into file - %s, press ctrl+c to back", name)
 					}
 				}
 				m.nextCreditCardInput()
@@ -190,6 +200,23 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.step {
 			case creditCardUpload:
 				m.prevCreditCardInput()
+			default:
+				return m, nil
+			}
+		case save:
+			switch m.step {
+			case uploadText:
+				if m.uploadText.textArea.Value() != "" {
+					name, err := m.storage.UploadPlainText(
+						m.setTokenToCtx(context.Background()),
+						m.uploadText.textArea.Value(),
+					)
+					if err != nil {
+						m.clientMessage = err
+						return m, nil
+					}
+					m.clientMessage = fmt.Errorf("information successfully saved into file - %s, press ctrl+c to back", name)
+				}
 			default:
 				return m, nil
 			}
@@ -307,6 +334,8 @@ func (m *Model) updateModelValue(msg tea.Msg) tea.Cmd {
 		inputs[focused].Focus()
 
 		return tea.Batch(cmds...)
+	case uploadText:
+		m.uploadText.textArea, cmd = m.uploadText.textArea.Update(msg)
 	}
 
 	return cmd

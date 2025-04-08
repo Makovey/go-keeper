@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -103,6 +104,14 @@ func tableContent() table.Model {
 	t.SetStyles(s)
 
 	return t
+}
+
+func textArea() textarea.Model {
+	ti := textarea.New()
+	ti.Placeholder = "Your data will be encrypted"
+	ti.Focus()
+
+	return ti
 }
 
 func creditCardModel() []textinput.Model {

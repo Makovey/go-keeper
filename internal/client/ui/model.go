@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -26,6 +27,7 @@ const (
 	deleted
 	upload
 	creditCardUpload
+	uploadText
 )
 
 type starterPage struct {
@@ -68,6 +70,10 @@ type uploadCreditCardPage struct {
 	validationErrors map[int]string
 }
 
+type uploadTextPage struct {
+	textArea textarea.Model
+}
+
 type Model struct {
 	step                 step
 	startedPage          starterPage
@@ -78,6 +84,7 @@ type Model struct {
 	deletePage           deletePage
 	uploadPage           uploadPage
 	uploadCreditCardPage uploadCreditCardPage
+	uploadText           uploadTextPage
 	auth                 *grpc.AuthClient
 	storage              *grpc.StorageClient
 	token                string
@@ -105,6 +112,7 @@ func InitialModel(
 			item("Download file"),
 			item("Delete file"),
 			item("Credit Card Number"),
+			item("Plain text"),
 		},
 	)
 	tableContent := tableContent()
@@ -119,6 +127,7 @@ func InitialModel(
 		deletePage:           deletePage{contentTable: tableContent},
 		uploadPage:           uploadPage{picker: filePicker()},
 		uploadCreditCardPage: uploadCreditCardPage{form: creditCardModel(), validationErrors: map[int]string{}},
+		uploadText:           uploadTextPage{textArea: textArea()},
 		auth:                 auth,
 		storage:              storage,
 	}
