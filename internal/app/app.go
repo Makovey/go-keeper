@@ -58,8 +58,8 @@ func (a *App) Run() {
 	wg.Add(1)
 	go a.runGRPCServer(ctx, &wg)
 
-	wg.Add(1)
-	go a.runUI(ctx, &wg)
+	//wg.Add(1)
+	//go a.runUI(ctx, &wg)
 
 	wg.Wait()
 }
