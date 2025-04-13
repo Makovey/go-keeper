@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -19,7 +19,7 @@ import (
 
 func TestServer_UploadPlainTextType(t *testing.T) {
 	type args struct {
-		req    *storage.UploadPlainTextTypeRequest
+		req    *pb.UploadPlainTextTypeRequest
 		userID string
 	}
 
@@ -39,7 +39,7 @@ func TestServer_UploadPlainTextType(t *testing.T) {
 			name: "successfully upload plain text",
 			args: args{
 				userID: uuid.NewString(),
-				req: &storage.UploadPlainTextTypeRequest{
+				req: &pb.UploadPlainTextTypeRequest{
 					Content: "test",
 				},
 			},
@@ -51,7 +51,7 @@ func TestServer_UploadPlainTextType(t *testing.T) {
 			name: "failed to upload plain text: invalid userID",
 			args: args{
 				userID: "MineUserID",
-				req: &storage.UploadPlainTextTypeRequest{
+				req: &pb.UploadPlainTextTypeRequest{
 					Content: "test",
 				},
 			},
@@ -64,7 +64,7 @@ func TestServer_UploadPlainTextType(t *testing.T) {
 			name: "failed to upload plain text: service error",
 			args: args{
 				userID: uuid.NewString(),
-				req: &storage.UploadPlainTextTypeRequest{
+				req: &pb.UploadPlainTextTypeRequest{
 					Content: "test",
 				},
 			},

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
@@ -12,12 +12,12 @@ import (
 
 type AuthClient struct {
 	log    logger.Logger
-	client auth.AuthClient
+	client pb.AuthClient
 }
 
 func NewAuthClient(
 	log logger.Logger,
-	client auth.AuthClient,
+	client pb.AuthClient,
 ) *AuthClient {
 
 	return &AuthClient{

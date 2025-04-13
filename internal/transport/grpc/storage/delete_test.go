@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -73,7 +73,7 @@ func TestServer_DeleteUsersFile(t *testing.T) {
 				service: m,
 			}
 
-			_, err := s.DeleteUsersFile(ctx, &storage.DeleteUsersFileRequest{FileId: "1", FileName: "txt"})
+			_, err := s.DeleteUsersFile(ctx, &pb.DeleteUsersFileRequest{FileId: "1", FileName: "txt"})
 			if tt.expects.wantErr {
 				assert.Equal(t, tt.expects.result, status.Code(err))
 				assert.Error(t, err)

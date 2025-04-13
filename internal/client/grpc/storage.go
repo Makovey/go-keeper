@@ -10,7 +10,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/utils"
 )
@@ -23,13 +23,13 @@ const (
 type StorageClient struct {
 	log        logger.Logger
 	dirManager utils.DirManager
-	client     storage.StorageServiceClient
+	client     pb.StorageServiceClient
 }
 
 func NewStorageClient(
 	log logger.Logger,
 	dirManager utils.DirManager,
-	client storage.StorageServiceClient,
+	client pb.StorageServiceClient,
 ) *StorageClient {
 
 	return &StorageClient{
@@ -56,7 +56,7 @@ func (s *StorageClient) UploadFile(
 		return err
 	}
 
-	if err = stream.Send(&storage.UploadRequest{
+	if err = stream.Send(&pb.UploadRequest{
 		FileName: filepath.Base(path),
 	}); err != nil {
 		return fmt.Errorf("[%s]: failed to send request: %v", fn, err)
@@ -72,7 +72,7 @@ func (s *StorageClient) UploadFile(
 			return fmt.Errorf("[%s]: failed to read file: %v", fn, err)
 		}
 
-		if err := stream.Send(&storage.UploadRequest{
+		if err := stream.Send(&pb.UploadRequest{
 			ChunkData: buf[:n],
 		}); err != nil {
 			return err
@@ -89,7 +89,7 @@ func (s *StorageClient) UploadFile(
 
 func (s *StorageClient) GetUsersFiles(
 	ctx context.Context,
-) ([]*storage.UsersFile, error) {
+) ([]*pb.UsersFile, error) {
 	fn := "grpc.GetUserFiles"
 
 	resp, err := s.client.GetUsersFile(ctx, &emptypb.Empty{})
@@ -106,7 +106,7 @@ func (s *StorageClient) DownloadFile(
 ) error {
 	fn := "grpc.DownloadFile"
 
-	req := &storage.DownloadRequest{FileId: fileID}
+	req := &pb.DownloadRequest{FileId: fileID}
 	stream, err := s.client.DownloadFile(ctx, req)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to init download: %v", fn, err)
@@ -160,7 +160,7 @@ func (s *StorageClient) DeleteFile(
 ) error {
 	fn := "grpc.DeleteFile"
 
-	req := &storage.DeleteUsersFileRequest{FileName: fileName, FileId: fileID}
+	req := &pb.DeleteUsersFileRequest{FileName: fileName, FileId: fileID}
 	_, err := s.client.DeleteUsersFile(ctx, req)
 	if err != nil {
 		return fmt.Errorf("[%s]: failed to delete file: %v", fn, err)
@@ -175,7 +175,7 @@ func (s *StorageClient) UploadPlainText(
 ) (string, error) {
 	fn := "grpc.DeleteFile"
 
-	req := &storage.UploadPlainTextTypeRequest{Content: content}
+	req := &pb.UploadPlainTextTypeRequest{Content: content}
 	resp, err := s.client.UploadPlainTextType(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("[%s]: failed to upload plain text: %v", fn, err)

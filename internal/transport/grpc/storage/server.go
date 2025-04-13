@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
@@ -18,7 +18,7 @@ type ServiceStorage interface {
 }
 
 type Server struct {
-	storage.UnimplementedStorageServiceServer
+	pb.UnimplementedStorageServiceServer
 
 	log     logger.Logger
 	service ServiceStorage

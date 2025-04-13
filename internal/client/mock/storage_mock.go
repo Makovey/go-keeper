@@ -6,21 +6,21 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 type storageClientMock struct {
-	uploadStream        grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse]
-	downloadStream      grpc.ServerStreamingClient[storage.DownloadResponse]
-	usersFileResponse   *storage.GetUsersFileResponse
-	uploadPlainResponse *storage.UploadPlainTextTypeResponse
+	uploadStream        grpc.ClientStreamingClient[pb.UploadRequest, pb.UploadResponse]
+	downloadStream      grpc.ServerStreamingClient[pb.DownloadResponse]
+	usersFileResponse   *pb.GetUsersFileResponse
+	uploadPlainResponse *pb.UploadPlainTextTypeResponse
 	error               error
 }
 
 func NewStorageWithUploadStream(
-	stream grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse],
+	stream grpc.ClientStreamingClient[pb.UploadRequest, pb.UploadResponse],
 	error error,
-) storage.StorageServiceClient {
+) pb.StorageServiceClient {
 	return &storageClientMock{
 		uploadStream: stream,
 		error:        error,
@@ -28,9 +28,9 @@ func NewStorageWithUploadStream(
 }
 
 func NewStorageWithDownloadStream(
-	stream grpc.ServerStreamingClient[storage.DownloadResponse],
+	stream grpc.ServerStreamingClient[pb.DownloadResponse],
 	error error,
-) storage.StorageServiceClient {
+) pb.StorageServiceClient {
 	return &storageClientMock{
 		downloadStream: stream,
 		error:          error,
@@ -38,9 +38,9 @@ func NewStorageWithDownloadStream(
 }
 
 func NewStorageWitUsersFile(
-	usersFileResponse *storage.GetUsersFileResponse,
+	usersFileResponse *pb.GetUsersFileResponse,
 	error error,
-) storage.StorageServiceClient {
+) pb.StorageServiceClient {
 	return &storageClientMock{
 		usersFileResponse: usersFileResponse,
 		error:             error,
@@ -48,9 +48,9 @@ func NewStorageWitUsersFile(
 }
 
 func NewStorageWitUploadPlainText(
-	uploadResponse *storage.UploadPlainTextTypeResponse,
+	uploadResponse *pb.UploadPlainTextTypeResponse,
 	error error,
-) storage.StorageServiceClient {
+) pb.StorageServiceClient {
 	return &storageClientMock{
 		uploadPlainResponse: uploadResponse,
 		error:               error,
@@ -59,7 +59,7 @@ func NewStorageWitUploadPlainText(
 
 func NewStorageWitEmptyMock(
 	error error,
-) storage.StorageServiceClient {
+) pb.StorageServiceClient {
 	return &storageClientMock{
 		error: error,
 	}
@@ -68,7 +68,7 @@ func NewStorageWitEmptyMock(
 func (s *storageClientMock) UploadFile(
 	ctx context.Context,
 	opts ...grpc.CallOption,
-) (grpc.ClientStreamingClient[storage.UploadRequest, storage.UploadResponse], error) {
+) (grpc.ClientStreamingClient[pb.UploadRequest, pb.UploadResponse], error) {
 	if s.error != nil {
 		return nil, s.error
 	}
@@ -80,7 +80,7 @@ func (s *storageClientMock) GetUsersFile(
 	ctx context.Context,
 	in *emptypb.Empty,
 	opts ...grpc.CallOption,
-) (*storage.GetUsersFileResponse, error) {
+) (*pb.GetUsersFileResponse, error) {
 	if s.error != nil {
 		return nil, s.error
 	}
@@ -88,7 +88,7 @@ func (s *storageClientMock) GetUsersFile(
 	return s.usersFileResponse, nil
 }
 
-func (s *storageClientMock) DownloadFile(ctx context.Context, in *storage.DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[storage.DownloadResponse], error) {
+func (s *storageClientMock) DownloadFile(ctx context.Context, in *pb.DownloadRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.DownloadResponse], error) {
 	if s.error != nil {
 		return nil, s.error
 	}
@@ -96,7 +96,7 @@ func (s *storageClientMock) DownloadFile(ctx context.Context, in *storage.Downlo
 	return s.downloadStream, nil
 }
 
-func (s *storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (s *storageClientMock) DeleteUsersFile(ctx context.Context, in *pb.DeleteUsersFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	if s.error != nil {
 		return nil, s.error
 	}
@@ -106,9 +106,9 @@ func (s *storageClientMock) DeleteUsersFile(ctx context.Context, in *storage.Del
 
 func (s *storageClientMock) UploadPlainTextType(
 	ctx context.Context,
-	in *storage.UploadPlainTextTypeRequest,
+	in *pb.UploadPlainTextTypeRequest,
 	opts ...grpc.CallOption,
-) (*storage.UploadPlainTextTypeResponse, error) {
+) (*pb.UploadPlainTextTypeResponse, error) {
 	if s.error != nil {
 		return nil, s.error
 	}

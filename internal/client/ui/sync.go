@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 func (m *Model) syncCmd() tea.Cmd {
@@ -32,7 +32,7 @@ func (m *Model) loadDataCmd() tea.Cmd {
 }
 
 type dataMsg struct {
-	data []*storage.UsersFile
+	data []*pb.UsersFile
 }
 
 type errMsg struct {

@@ -13,24 +13,24 @@ import (
 
 const rootDirForStorage = "file_storage"
 
-type diskStorager struct {
+type diskStorage struct {
 	log        logger.Logger
 	dirManager utils.DirManager
 	mu         sync.RWMutex
 }
 
-func NewDiskStorager(
+func NewDiskStorage(
 	log logger.Logger,
 	dirManager utils.DirManager,
 ) storage.FileStorager {
-	return &diskStorager{
+	return &diskStorage{
 		log:        log,
 		dirManager: dirManager,
 		mu:         sync.RWMutex{},
 	}
 }
 
-func (d *diskStorager) Save(path, fileName string, data *bufio.Reader) error {
+func (d *diskStorage) Save(path, fileName string, data *bufio.Reader) error {
 	fn := "file_storager.Save"
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -57,7 +57,7 @@ func (d *diskStorager) Save(path, fileName string, data *bufio.Reader) error {
 	return nil
 }
 
-func (d *diskStorager) Get(path string) ([]byte, error) {
+func (d *diskStorage) Get(path string) ([]byte, error) {
 	fn := "file_storager.Get"
 
 	d.mu.RLock()
@@ -72,7 +72,7 @@ func (d *diskStorager) Get(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (d *diskStorager) Delete(path string) error {
+func (d *diskStorage) Delete(path string) error {
 	fn := "file_storager.Delete"
 	d.mu.Lock()
 	defer d.mu.Unlock()

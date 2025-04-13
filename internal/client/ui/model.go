@@ -13,7 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/Makovey/go-keeper/internal/client/grpc"
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
@@ -52,12 +52,12 @@ type mainMenuPage struct {
 
 type downloadPage struct {
 	contentTable table.Model
-	usersFiles   []*storage.UsersFile
+	usersFiles   []*pb.UsersFile
 }
 
 type deletePage struct {
 	contentTable table.Model
-	usersFiles   []*storage.UsersFile
+	usersFiles   []*pb.UsersFile
 }
 
 type uploadPage struct {

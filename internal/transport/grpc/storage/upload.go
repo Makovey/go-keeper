@@ -9,12 +9,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
-func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest, storage.UploadResponse]) error {
+func (s *Server) UploadFile(req grpc.ClientStreamingServer[pb.UploadRequest, pb.UploadResponse]) error {
 	fn := "storage.UploadFile"
 
 	userID, err := helper.GetUserIDFromContext(req.Context())
@@ -33,7 +33,7 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 		}
 		if err != nil {
 			s.log.Errorf("[%s]: %v", fn, err)
-			return status.Error(codes.InvalidArgument, "something went wrong, try another file")
+			return status.Error(codes.Internal, helper.InternalServerError)
 		}
 
 		if _, err = buf.Write(r.ChunkData); err != nil {
@@ -58,5 +58,5 @@ func (s *Server) UploadFile(req grpc.ClientStreamingServer[storage.UploadRequest
 		return status.Error(codes.Internal, helper.InternalServerError)
 	}
 
-	return req.SendAndClose(&storage.UploadResponse{FileId: fileId})
+	return req.SendAndClose(&pb.UploadResponse{FileId: fileId})
 }

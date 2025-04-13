@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
-func ToUserFromProto(user *auth.User) *model.User {
+func ToUserFromProto(user *pb.User) *model.User {
 	return &model.User{
 		Name:     user.Name,
 		Email:    user.Email,
@@ -13,8 +13,8 @@ func ToUserFromProto(user *auth.User) *model.User {
 	}
 }
 
-func ToProtoFromUser(user *model.User) *auth.User {
-	return &auth.User{
+func ToProtoFromUser(user *model.User) *pb.User {
+	return &pb.User{
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: user.Password,

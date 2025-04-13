@@ -5,25 +5,25 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 )
 
 type authClientMock struct {
-	model *auth.AuthResponse
+	model *pb.AuthResponse
 	error error
 }
 
 func NewAuthClientMock(
-	model *auth.AuthResponse,
+	model *pb.AuthResponse,
 	error error,
-) auth.AuthClient {
+) pb.AuthClient {
 	return &authClientMock{
 		model: model,
 		error: error,
 	}
 }
 
-func (a authClientMock) RegisterUser(ctx context.Context, in *auth.User, opts ...grpc.CallOption) (*auth.AuthResponse, error) {
+func (a authClientMock) RegisterUser(ctx context.Context, in *pb.User, opts ...grpc.CallOption) (*pb.AuthResponse, error) {
 	if a.error != nil {
 		return nil, a.error
 	}
@@ -31,7 +31,7 @@ func (a authClientMock) RegisterUser(ctx context.Context, in *auth.User, opts ..
 	return a.model, nil
 }
 
-func (a authClientMock) LoginUser(ctx context.Context, in *auth.LoginRequest, opts ...grpc.CallOption) (*auth.AuthResponse, error) {
+func (a authClientMock) LoginUser(ctx context.Context, in *pb.LoginRequest, opts ...grpc.CallOption) (*pb.AuthResponse, error) {
 	if a.error != nil {
 		return nil, a.error
 	}

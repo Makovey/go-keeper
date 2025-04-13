@@ -22,10 +22,8 @@ type FileStorager interface {
 	Delete(path string) error
 }
 
-// RepositoryStorage NOTE: суффикс Storage, чтобы не было коллизии имен при генерации моков
-//
-//go:generate mockgen -source=storage.go -destination=../../repository/mock/storage_repository_mock.go -package=mock
-type RepositoryStorage interface {
+//go:generate mockgen -source=storage.go -destination=../../repository/mock/storage_repository_mock.go -package=mock -mock_names Repository=MockRepositoryStorage
+type Repository interface {
 	SaveFileMetadata(ctx context.Context, fileData *entity.File) error
 	GetFileMetadata(ctx context.Context, userID, fileID string) (*entity.File, error)
 	GetUsersFiles(ctx context.Context, userID string) ([]*entity.File, error)
@@ -33,14 +31,14 @@ type RepositoryStorage interface {
 }
 
 type service struct {
-	repo     RepositoryStorage
+	repo     Repository
 	storager FileStorager
 	crypto   utils.Crypto
 	cfg      config.Config
 }
 
 func NewStorageService(
-	repo RepositoryStorage,
+	repo Repository,
 	storager FileStorager,
 	crypto utils.Crypto,
 	cfg config.Config,

@@ -79,7 +79,7 @@ func (mr *MockFileStoragerMockRecorder) Save(path, fileName, data interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockFileStorager)(nil).Save), path, fileName, data)
 }
 
-// MockRepositoryStorage is a mock of RepositoryStorage interface.
+// MockRepositoryStorage is a mock of Repository interface.
 type MockRepositoryStorage struct {
 	ctrl     *gomock.Controller
 	recorder *MockRepositoryStorageMockRecorder

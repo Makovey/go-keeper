@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -22,7 +22,7 @@ import (
 func TestServer_UploadFile(t *testing.T) {
 	type args struct {
 		userID string
-		chunks []*storage.UploadRequest
+		chunks []*pb.UploadRequest
 	}
 
 	type expects struct {
@@ -41,7 +41,7 @@ func TestServer_UploadFile(t *testing.T) {
 			name: "successfully upload file",
 			args: args{
 				userID: uuid.NewString(),
-				chunks: []*storage.UploadRequest{
+				chunks: []*pb.UploadRequest{
 					{
 						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
@@ -56,7 +56,7 @@ func TestServer_UploadFile(t *testing.T) {
 			name: "failed to upload file: invalid userID",
 			args: args{
 				userID: "testToken",
-				chunks: []*storage.UploadRequest{
+				chunks: []*pb.UploadRequest{
 					{
 						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
@@ -71,15 +71,15 @@ func TestServer_UploadFile(t *testing.T) {
 			name: "failed to upload file: invalid request",
 			args: args{
 				userID: uuid.NewString(),
-				chunks: []*storage.UploadRequest{},
+				chunks: []*pb.UploadRequest{},
 			},
-			expects: expects{servAns: uuid.NewString(), result: codes.InvalidArgument, wantErr: true},
+			expects: expects{servAns: uuid.NewString(), result: codes.Internal, wantErr: true},
 		},
 		{
 			name: "failed to upload file: service error",
 			args: args{
 				userID: uuid.NewString(),
-				chunks: []*storage.UploadRequest{
+				chunks: []*pb.UploadRequest{
 					{
 						FileName:  "testable.txt",
 						ChunkData: []byte("test1"),
@@ -109,10 +109,10 @@ func TestServer_UploadFile(t *testing.T) {
 				service: m,
 			}
 
-			stream := &grpcMock.ClientStreamMock[storage.UploadRequest, storage.UploadResponse]{
-				RecvFunc: func() func() (*storage.UploadRequest, error) {
+			stream := &grpcMock.ClientStreamMock[pb.UploadRequest, pb.UploadResponse]{
+				RecvFunc: func() func() (*pb.UploadRequest, error) {
 					count := 0
-					return func() (*storage.UploadRequest, error) {
+					return func() (*pb.UploadRequest, error) {
 						if len(tt.args.chunks) < 1 {
 							return nil, errors.New("test error")
 						}
@@ -127,7 +127,7 @@ func TestServer_UploadFile(t *testing.T) {
 						}
 					}
 				}(),
-				SendAndCloseFunc: func(resp *storage.UploadResponse) error {
+				SendAndCloseFunc: func(resp *pb.UploadResponse) error {
 					assert.Equal(t, tt.expects.servAns, resp.FileId)
 					return nil
 				},

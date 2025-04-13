@@ -2,14 +2,15 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -17,8 +18,8 @@ import (
 	client "github.com/Makovey/go-keeper/internal/client/grpc"
 	"github.com/Makovey/go-keeper/internal/client/ui"
 	"github.com/Makovey/go-keeper/internal/config"
-	grpcAuth "github.com/Makovey/go-keeper/internal/gen/auth"
-	grpcStorage "github.com/Makovey/go-keeper/internal/gen/storage"
+	pbAuth "github.com/Makovey/go-keeper/internal/gen/auth"
+	pbStorage "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/interceptor/stream"
 	"github.com/Makovey/go-keeper/internal/interceptor/unary"
 	"github.com/Makovey/go-keeper/internal/logger"
@@ -49,29 +50,34 @@ func NewApp(
 	}
 }
 
-func (a *App) Run() {
+func (a *App) Run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
 	defer stop()
 
-	var wg sync.WaitGroup
+	g, ctx := errgroup.WithContext(ctx)
 
-	wg.Add(1)
-	go a.runGRPCServer(ctx, &wg)
+	g.Go(func() error {
+		return a.runGRPCServer(ctx)
+	})
 
-	wg.Add(1)
-	go a.runUI(ctx, &wg)
+	g.Go(func() error {
+		return a.runUI(ctx)
+	})
 
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
+func (a *App) runGRPCServer(ctx context.Context) error {
 	fn := "app.runGRPCServer"
-	defer wg.Done()
 
 	listen, err := net.Listen("tcp", a.cfg.GRPCPort())
 	if err != nil {
 		a.log.Errorf("[%s]: failed to listen: %s", fn, err.Error())
-		return
+		return err
 	}
 
 	s := grpc.NewServer(
@@ -87,40 +93,43 @@ func (a *App) runGRPCServer(ctx context.Context, wg *sync.WaitGroup) {
 	)
 
 	reflection.Register(s)
-	grpcAuth.RegisterAuthServer(s, a.authServer)
-	grpcStorage.RegisterStorageServiceServer(s, a.storage)
+	pbAuth.RegisterAuthServer(s, a.authServer)
+	pbStorage.RegisterStorageServiceServer(s, a.storage)
 
 	a.log.Infof("[%s]: starting grpc server on: %s", fn, a.cfg.GRPCPort())
+	serveErr := make(chan error, 1)
 	go func() {
 		if err = s.Serve(listen); err != nil {
-			a.log.Errorf("[%s]: can't serve grpc server: %s", fn, err.Error())
-			return
+			serveErr <- fmt.Errorf("[%s]: can't serve grpc server: %w", fn, err)
 		}
 	}()
 
-	<-ctx.Done()
-
-	shutDownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	isStoppedCh := make(chan struct{})
-	go func() {
-		s.GracefulStop()
-		close(isStoppedCh)
-	}()
-
 	select {
-	case <-isStoppedCh:
-		a.log.Infof("[%s]: grpc server stopped gracefully", fn)
-	case <-shutDownCtx.Done():
-		a.log.Errorf("[%s]: graceful shutdown timeout reached, forcing shutdown", fn)
-		s.Stop()
+	case err = <-serveErr:
+		return err
+	case <-ctx.Done():
+		shutDownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		isStoppedCh := make(chan struct{})
+		go func() {
+			s.GracefulStop()
+			close(isStoppedCh)
+		}()
+
+		select {
+		case <-isStoppedCh:
+			a.log.Infof("[%s]: grpc server stopped gracefully", fn)
+		case <-shutDownCtx.Done():
+			a.log.Errorf("[%s]: graceful shutdown timeout reached, forcing shutdown", fn)
+			s.Stop()
+		}
 	}
+	return nil
 }
 
-func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
+func (a *App) runUI(ctx context.Context) error {
 	fn := "app.runUI"
-	defer wg.Done()
 
 	conn, err := grpc.NewClient(
 		a.cfg.ClientConnectionHost()+a.cfg.GRPCPort(),
@@ -128,19 +137,21 @@ func (a *App) runUI(ctx context.Context, wg *sync.WaitGroup) {
 	)
 	if err != nil {
 		a.log.Errorf("[%s]: failed to create grpc client: %s", fn, err.Error())
-		return
+		return err
 	}
 	defer conn.Close()
 
-	authClient := client.NewAuthClient(a.log, grpcAuth.NewAuthClient(conn))
-	storageClient := client.NewStorageClient(a.log, utils.NewDirManager(), grpcStorage.NewStorageServiceClient(conn))
+	authClient := client.NewAuthClient(a.log, pbAuth.NewAuthClient(conn))
+	storageClient := client.NewStorageClient(a.log, utils.NewDirManager(), pbStorage.NewStorageServiceClient(conn))
 
-	p := tea.NewProgram(ui.InitialModel(authClient, storageClient, a.cfg.UpdateDurationForUI()), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
+	p := tea.NewProgram(ui.InitialModel(authClient, storageClient, a.cfg.UpdateDurationForUI()), tea.WithAltScreen(), tea.WithContext(ctx))
+	if _, err = p.Run(); err != nil {
 		a.log.Infof("[%s]: can't run ui program, cause: %v", fn, err)
-		return
+		return err
 	}
 
 	<-ctx.Done()
 	p.Quit()
+
+	return nil
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Makovey/go-keeper/internal/client/mock"
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	utilsMock "github.com/Makovey/go-keeper/internal/utils/mock"
 )
@@ -21,7 +21,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	type args struct {
-		req  *storage.UploadRequest
+		req  *pb.UploadRequest
 		path string
 	}
 
@@ -39,7 +39,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 	}{
 		{
 			name: "client successfully upload file",
-			args: args{req: &storage.UploadRequest{
+			args: args{req: &pb.UploadRequest{
 				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
@@ -48,7 +48,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		},
 		{
 			name: "client failed to upload file: can't find file",
-			args: args{req: &storage.UploadRequest{
+			args: args{req: &pb.UploadRequest{
 				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: "tmp.file.txt",
@@ -57,7 +57,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		},
 		{
 			name: "client failed to upload file: client error",
-			args: args{req: &storage.UploadRequest{
+			args: args{req: &pb.UploadRequest{
 				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
@@ -66,7 +66,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		},
 		{
 			name: "client failed to upload file: send stream error",
-			args: args{req: &storage.UploadRequest{
+			args: args{req: &pb.UploadRequest{
 				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
@@ -75,7 +75,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 		},
 		{
 			name: "client failed to upload file: can't close a stream",
-			args: args{req: &storage.UploadRequest{
+			args: args{req: &pb.UploadRequest{
 				FileName:  tmpFile.Name(),
 				ChunkData: make([]byte, 0)},
 				path: tmpFile.Name(),
@@ -88,11 +88,11 @@ func TestStorageClient_UploadFile(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			stream := mock.ClientStreamMock[storage.UploadRequest, storage.UploadResponse]{
-				SendFunc: func(req *storage.UploadRequest) error {
+			stream := mock.ClientStreamMock[pb.UploadRequest, pb.UploadResponse]{
+				SendFunc: func(req *pb.UploadRequest) error {
 					return tt.expects.sendErr
 				},
-				CloseAndRecvFunc: func() (*storage.UploadResponse, error) {
+				CloseAndRecvFunc: func() (*pb.UploadResponse, error) {
 					return nil, tt.expects.closeErr
 				},
 			}
@@ -113,7 +113,7 @@ func TestStorageClient_UploadFile(t *testing.T) {
 
 func TestStorageClient_GetUsersFiles(t *testing.T) {
 	type expects struct {
-		clientResp *storage.GetUsersFileResponse
+		clientResp *pb.GetUsersFileResponse
 		clientErr  error
 		wantErr    bool
 	}
@@ -125,8 +125,8 @@ func TestStorageClient_GetUsersFiles(t *testing.T) {
 		{
 			name: "client successfully get users files",
 			expects: expects{
-				clientResp: &storage.GetUsersFileResponse{
-					Files: []*storage.UsersFile{
+				clientResp: &pb.GetUsersFileResponse{
+					Files: []*pb.UsersFile{
 						{
 							FileName: "file1.txt",
 						},
@@ -168,7 +168,7 @@ func TestStorageClient_DownloadFile(t *testing.T) {
 	defer os.Remove("temp")
 
 	type args struct {
-		chunks []*storage.DownloadResponse
+		chunks []*pb.DownloadResponse
 		fileID string
 	}
 
@@ -188,7 +188,7 @@ func TestStorageClient_DownloadFile(t *testing.T) {
 		{
 			name: "client successfully get users files",
 			args: args{
-				chunks: []*storage.DownloadResponse{
+				chunks: []*pb.DownloadResponse{
 					{
 						ChunkData: []byte("file1.txt"),
 						FileName:  "file1.txt",
@@ -205,7 +205,7 @@ func TestStorageClient_DownloadFile(t *testing.T) {
 		{
 			name: "client failed get users files: file name is empty",
 			args: args{
-				chunks: []*storage.DownloadResponse{
+				chunks: []*pb.DownloadResponse{
 					{
 						ChunkData: []byte("file1.txt"),
 						FileName:  "",
@@ -231,7 +231,7 @@ func TestStorageClient_DownloadFile(t *testing.T) {
 		{
 			name: "client failed get users files: can't create directory",
 			args: args{
-				chunks: []*storage.DownloadResponse{
+				chunks: []*pb.DownloadResponse{
 					{
 						ChunkData: []byte("file1.txt"),
 						FileName:  "file1.txt",
@@ -261,10 +261,10 @@ func TestStorageClient_DownloadFile(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			stream := mock.ServerStreamClientMock[storage.DownloadResponse]{
-				RecvFunc: func() func() (*storage.DownloadResponse, error) {
+			stream := mock.ServerStreamClientMock[pb.DownloadResponse]{
+				RecvFunc: func() func() (*pb.DownloadResponse, error) {
 					count := 0
-					return func() (*storage.DownloadResponse, error) {
+					return func() (*pb.DownloadResponse, error) {
 						if len(tt.args.chunks) < 1 {
 							return nil, errors.New("test error")
 						}
@@ -350,7 +350,7 @@ func TestStorageClient_UploadPlainText(t *testing.T) {
 	}
 
 	type expects struct {
-		clientResp *storage.UploadPlainTextTypeResponse
+		clientResp *pb.UploadPlainTextTypeResponse
 		clientErr  error
 		wantErr    bool
 	}
@@ -363,7 +363,7 @@ func TestStorageClient_UploadPlainText(t *testing.T) {
 		{
 			name: "client successfully upload plain text",
 			expects: expects{
-				clientResp: &storage.UploadPlainTextTypeResponse{
+				clientResp: &pb.UploadPlainTextTypeResponse{
 					FileName: "file1.txt",
 				},
 			},

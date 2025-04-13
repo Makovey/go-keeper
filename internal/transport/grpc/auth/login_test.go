@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -19,7 +19,7 @@ import (
 
 func TestServer_LoginUser(t *testing.T) {
 	type args struct {
-		req *auth.LoginRequest
+		req *pb.LoginRequest
 	}
 
 	type expects struct {
@@ -35,32 +35,32 @@ func TestServer_LoginUser(t *testing.T) {
 	}{
 		{
 			name:    "successfully login user",
-			args:    args{req: &auth.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
+			args:    args{req: &pb.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
 			expects: expects{result: codes.OK},
 		},
 		{
 			name:    "failed to login user: invalid email",
-			args:    args{req: &auth.LoginRequest{Email: "testemail.ru", Password: "ttTest"}},
+			args:    args{req: &pb.LoginRequest{Email: "testemail.ru", Password: "ttTest"}},
 			expects: expects{wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to login user: invalid password",
-			args:    args{req: &auth.LoginRequest{Email: "test@test.ru", Password: "test"}},
+			args:    args{req: &pb.LoginRequest{Email: "test@test.ru", Password: "test"}},
 			expects: expects{wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to login user: user doesn't exists",
-			args:    args{req: &auth.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
+			args:    args{req: &pb.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
 			expects: expects{servErr: service.ErrUserNotFound, wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to login user: incorrect password",
-			args:    args{req: &auth.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
+			args:    args{req: &pb.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
 			expects: expects{servErr: service.ErrIncorrectPassword, wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to login user: random error from service",
-			args:    args{req: &auth.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
+			args:    args{req: &pb.LoginRequest{Email: "test@test.ru", Password: "ttTest"}},
 			expects: expects{servErr: service.ErrGeneratePassword, wantErr: true, result: codes.Internal},
 		},
 	}

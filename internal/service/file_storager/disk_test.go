@@ -75,7 +75,7 @@ func Test_diskStorager_Save(t *testing.T) {
 			m.EXPECT().CreateDir(gomock.Any(), gomock.Any()).Return(tt.expects.createDirErr).AnyTimes()
 			m.EXPECT().CreateFile(gomock.Any()).Return(tt.expects.file, tt.expects.createFileErr).AnyTimes()
 
-			s := NewDiskStorager(dummy.NewDummyLogger(), m)
+			s := NewDiskStorage(dummy.NewDummyLogger(), m)
 			err := s.Save(tt.args.path, tt.args.name, tt.args.buf)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -124,7 +124,7 @@ func Test_diskStorager_Get(t *testing.T) {
 			m := mock.NewMockDirManager(ctrl)
 			m.EXPECT().ReadFile(gomock.Any()).Return(tt.expects.readFileRes, tt.expects.readFileErr).AnyTimes()
 
-			s := NewDiskStorager(dummy.NewDummyLogger(), m)
+			s := NewDiskStorage(dummy.NewDummyLogger(), m)
 			got, err := s.Get(tt.args.path)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -172,7 +172,7 @@ func Test_diskStorager_Delete(t *testing.T) {
 			m := mock.NewMockDirManager(ctrl)
 			m.EXPECT().RemoveFile(gomock.Any()).Return(tt.expects.removeFileErr).AnyTimes()
 
-			s := NewDiskStorager(dummy.NewDummyLogger(), m)
+			s := NewDiskStorage(dummy.NewDummyLogger(), m)
 			err := s.Delete(tt.args.path)
 			if tt.wantErr {
 				assert.Error(t, err)

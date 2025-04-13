@@ -40,7 +40,7 @@ func main() {
 	aService := authService.NewAuthService(repo, manager)
 	sService := storageService.NewStorageService(
 		repo,
-		file_storager.NewDiskStorager(log, utils.NewDirManager()),
+		file_storager.NewDiskStorage(log, utils.NewDirManager()),
 		utils.NewCrypto(),
 		cfg,
 	)
@@ -55,7 +55,10 @@ func main() {
 		storageServer,
 	)
 
-	appl.Run()
+	err = appl.Run()
+	if err != nil {
+		log.Errorf("[%s]: %s", "main", err.Error())
+	}
 
 	if err = repo.Close(); err != nil {
 		log.Errorf("closed repo with error: %s", err.Error())

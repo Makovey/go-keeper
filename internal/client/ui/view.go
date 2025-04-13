@@ -11,7 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 )
 
 var (
@@ -147,7 +147,7 @@ func (m *Model) View() string {
 	return docStyle.Render(b.String() + "\n")
 }
 
-func updateTable(model *table.Model, data []*storage.UsersFile) {
+func updateTable(model *table.Model, data []*pb.UsersFile) {
 	rows := make([]table.Row, 0, len(data))
 
 	for _, file := range data {

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Makovey/go-keeper/internal/client/mock"
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
@@ -19,7 +19,7 @@ func TestAuthClient_Login(t *testing.T) {
 	}
 
 	type expects struct {
-		clientAns *auth.AuthResponse
+		clientAns *pb.AuthResponse
 		clientErr error
 		wantErr   bool
 	}
@@ -32,7 +32,7 @@ func TestAuthClient_Login(t *testing.T) {
 		{
 			name:    "client successfully login user",
 			args:    args{req: &model.Login{Email: "test@test.ru", Password: "ttTest"}},
-			expects: expects{clientAns: &auth.AuthResponse{Token: "testable-token"}},
+			expects: expects{clientAns: &pb.AuthResponse{Token: "testable-token"}},
 		},
 		{
 			name:    "client fail to login user: grpc client returned error",
@@ -67,7 +67,7 @@ func TestAuthClient_Register(t *testing.T) {
 
 	type expects struct {
 		clientErr error
-		clientAns *auth.AuthResponse
+		clientAns *pb.AuthResponse
 		wantErr   bool
 	}
 
@@ -79,7 +79,7 @@ func TestAuthClient_Register(t *testing.T) {
 		{
 			name:    "client successfully register user",
 			args:    args{req: &model.User{Name: "TestableName", Email: "test@test.ru", Password: "ttTest"}},
-			expects: expects{clientAns: &auth.AuthResponse{Token: "testable-token"}},
+			expects: expects{clientAns: &pb.AuthResponse{Token: "testable-token"}},
 		},
 		{
 			name:    "client fail to register user: grpc client returned error",

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
@@ -15,7 +15,7 @@ type Service interface {
 }
 
 type Server struct {
-	auth.UnimplementedAuthServer
+	pb.UnimplementedAuthServer
 
 	log     logger.Logger
 	service Service

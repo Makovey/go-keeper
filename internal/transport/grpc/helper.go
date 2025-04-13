@@ -13,6 +13,7 @@ const (
 	InternalServerError = "internal server error"
 	ReloginAndTryAgain  = "please, relogin again, to get access to this resource"
 	InvalidArgument     = "invalid argument"
+	NotFound            = "not found"
 )
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {

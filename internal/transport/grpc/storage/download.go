@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 )
 
 func (s *Server) DownloadFile(
-	req *storage.DownloadRequest,
-	stream grpc.ServerStreamingServer[storage.DownloadResponse],
+	req *pb.DownloadRequest,
+	stream grpc.ServerStreamingServer[pb.DownloadResponse],
 ) error {
 	fn := "storage.DownloadFile"
 
@@ -25,10 +25,10 @@ func (s *Server) DownloadFile(
 
 	file, err := s.service.DownloadFile(stream.Context(), userID, req.GetFileId())
 	if err != nil {
-		return status.Error(codes.InvalidArgument, helper.InvalidArgument)
+		return status.Error(codes.NotFound, helper.NotFound)
 	}
 
-	if err = stream.Send(&storage.DownloadResponse{
+	if err = stream.Send(&pb.DownloadResponse{
 		FileName: file.FileName,
 	}); err != nil || file.FileName == "" {
 		s.log.Errorf("[%s]: %v", fn, err)
@@ -46,7 +46,7 @@ func (s *Server) DownloadFile(
 			return status.Errorf(codes.Internal, "failed to read file: %v", err)
 		}
 
-		if err := stream.Send(&storage.DownloadResponse{
+		if err := stream.Send(&pb.DownloadResponse{
 			ChunkData: buf[:n],
 		}); err != nil {
 			s.log.Errorf("[%s]: %v", fn, err)

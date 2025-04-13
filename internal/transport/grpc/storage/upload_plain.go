@@ -6,11 +6,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 )
 
-func (s *Server) UploadPlainTextType(ctx context.Context, req *storage.UploadPlainTextTypeRequest) (*storage.UploadPlainTextTypeResponse, error) {
+func (s *Server) UploadPlainTextType(ctx context.Context, req *pb.UploadPlainTextTypeRequest) (*pb.UploadPlainTextTypeResponse, error) {
 	fn := "storage.UploadFile"
 
 	userID, err := helper.GetUserIDFromContext(ctx)
@@ -24,5 +24,5 @@ func (s *Server) UploadPlainTextType(ctx context.Context, req *storage.UploadPla
 		return nil, status.Error(codes.Internal, helper.InternalServerError)
 	}
 
-	return &storage.UploadPlainTextTypeResponse{FileName: name}, nil
+	return &pb.UploadPlainTextTypeResponse{FileName: name}, nil
 }

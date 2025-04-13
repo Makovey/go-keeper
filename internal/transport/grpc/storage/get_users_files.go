@@ -7,12 +7,12 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/mapper"
 )
 
-func (s *Server) GetUsersFile(ctx context.Context, req *emptypb.Empty) (*storage.GetUsersFileResponse, error) {
+func (s *Server) GetUsersFile(ctx context.Context, req *emptypb.Empty) (*pb.GetUsersFileResponse, error) {
 	fn := "storage.GetUsersFile"
 
 	userID, err := helper.GetUserIDFromContext(ctx)
@@ -26,5 +26,5 @@ func (s *Server) GetUsersFile(ctx context.Context, req *emptypb.Empty) (*storage
 		return nil, status.Error(codes.Internal, helper.InternalServerError)
 	}
 
-	return &storage.GetUsersFileResponse{Files: mapper.ToProtoFromFile(files)}, nil
+	return &pb.GetUsersFileResponse{Files: mapper.ToProtoFromFile(files)}, nil
 }

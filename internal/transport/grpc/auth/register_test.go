@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -19,7 +19,7 @@ import (
 
 func TestServer_RegisterUser(t *testing.T) {
 	type args struct {
-		req *auth.User
+		req *pb.User
 	}
 
 	type expects struct {
@@ -35,32 +35,32 @@ func TestServer_RegisterUser(t *testing.T) {
 	}{
 		{
 			name:    "successfully register user",
-			args:    args{req: &auth.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
+			args:    args{req: &pb.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
 			expects: expects{result: codes.OK},
 		},
 		{
 			name:    "failed to register user: invalid name",
-			args:    args{req: &auth.User{Name: "", Email: "tt@mail.ru", Password: "ttPassword"}},
+			args:    args{req: &pb.User{Name: "", Email: "tt@mail.ru", Password: "ttPassword"}},
 			expects: expects{wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to register user: invalid email",
-			args:    args{req: &auth.User{Name: "ttName", Email: "testEmail.ru", Password: "ttPassword"}},
+			args:    args{req: &pb.User{Name: "ttName", Email: "testEmail.ru", Password: "ttPassword"}},
 			expects: expects{wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to register user: invalid password",
-			args:    args{req: &auth.User{Name: "", Email: "tt@mail.ru", Password: "Pass"}},
+			args:    args{req: &pb.User{Name: "", Email: "tt@mail.ru", Password: "Pass"}},
 			expects: expects{wantErr: true, result: codes.InvalidArgument},
 		},
 		{
 			name:    "failed to register user: user already exists",
-			args:    args{req: &auth.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
+			args:    args{req: &pb.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
 			expects: expects{servErr: service.ErrUserAlreadyExists, wantErr: true, result: codes.AlreadyExists},
 		},
 		{
 			name:    "failed to register user: user already exists",
-			args:    args{req: &auth.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
+			args:    args{req: &pb.User{Name: "ttName", Email: "tt@mail.ru", Password: "ttPassword"}},
 			expects: expects{servErr: service.ErrGeneratePassword, wantErr: true, result: codes.Internal},
 		},
 	}

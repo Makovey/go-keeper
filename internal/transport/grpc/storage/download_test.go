@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/Makovey/go-keeper/internal/gen/storage"
+	pb "github.com/Makovey/go-keeper/internal/gen/storage"
 	"github.com/Makovey/go-keeper/internal/logger/dummy"
 	"github.com/Makovey/go-keeper/internal/service/jwt"
 	"github.com/Makovey/go-keeper/internal/service/mock"
@@ -77,7 +77,7 @@ func TestServer_DownloadFile(t *testing.T) {
 			expects: expects{
 				servErr: errors.New("file not found"),
 				wantErr: true,
-				result:  codes.InvalidArgument,
+				result:  codes.NotFound,
 			},
 		},
 		{
@@ -126,8 +126,8 @@ func TestServer_DownloadFile(t *testing.T) {
 				service: m,
 			}
 
-			stream := &grpcMock.ClientStreamMock[storage.DownloadRequest, storage.DownloadResponse]{
-				SendFunc: func(s *storage.DownloadResponse) error {
+			stream := &grpcMock.ClientStreamMock[pb.DownloadRequest, pb.DownloadResponse]{
+				SendFunc: func(s *pb.DownloadResponse) error {
 					return tt.expects.sendErr
 				},
 				ContextFunc: func() context.Context {
@@ -135,7 +135,7 @@ func TestServer_DownloadFile(t *testing.T) {
 				},
 			}
 
-			err := s.DownloadFile(&storage.DownloadRequest{FileId: tt.args.fileID}, stream)
+			err := s.DownloadFile(&pb.DownloadRequest{FileId: tt.args.fileID}, stream)
 			if tt.expects.wantErr {
 				assert.Equal(t, tt.expects.result, status.Code(err))
 				assert.Error(t, err)

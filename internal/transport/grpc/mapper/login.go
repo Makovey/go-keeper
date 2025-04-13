@@ -1,19 +1,19 @@
 package mapper
 
 import (
-	"github.com/Makovey/go-keeper/internal/gen/auth"
+	pb "github.com/Makovey/go-keeper/internal/gen/auth"
 	"github.com/Makovey/go-keeper/internal/transport/grpc/model"
 )
 
-func ToLoginFromProto(user *auth.LoginRequest) *model.Login {
+func ToLoginFromProto(user *pb.LoginRequest) *model.Login {
 	return &model.Login{
 		Email:    user.Email,
 		Password: user.Password,
 	}
 }
 
-func ToProtoFromLogin(login *model.Login) *auth.LoginRequest {
-	return &auth.LoginRequest{
+func ToProtoFromLogin(login *model.Login) *pb.LoginRequest {
+	return &pb.LoginRequest{
 		Email:    login.Email,
 		Password: login.Password,
 	}
