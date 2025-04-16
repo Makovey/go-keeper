@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"io"
 
 	"github.com/dustin/go-humanize"
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/Makovey/go-keeper/internal/gen/storage"
+	serviceErrors "github.com/Makovey/go-keeper/internal/service"
 	helper "github.com/Makovey/go-keeper/internal/transport/grpc"
 )
 
@@ -25,7 +27,12 @@ func (s *Server) DownloadFile(
 
 	file, err := s.service.DownloadFile(stream.Context(), userID, req.GetFileId())
 	if err != nil {
-		return status.Error(codes.NotFound, helper.NotFound)
+		switch {
+		case errors.Is(err, serviceErrors.ErrFileNotFound):
+			return status.Error(codes.NotFound, helper.NotFound)
+		default:
+			return status.Error(codes.Internal, helper.InternalServerError)
+		}
 	}
 
 	if err = stream.Send(&pb.DownloadResponse{

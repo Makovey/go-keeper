@@ -77,7 +77,7 @@ func TestServer_DownloadFile(t *testing.T) {
 			expects: expects{
 				servErr: errors.New("file not found"),
 				wantErr: true,
-				result:  codes.NotFound,
+				result:  codes.Internal,
 			},
 		},
 		{
